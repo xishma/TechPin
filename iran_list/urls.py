@@ -23,7 +23,9 @@ urlpatterns = [
     url(r'^static/(?P<path>.*)$', serve, {'document_root': settings.STATIC_ROOT}),
     url(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
 
-    url(r'^admin/', admin.site.urls),
+    url(r'^admin', admin.site.urls),
+
+    url(r'^api/', include('iran_list.products.api_urls')),
 
     url(r'^', include('iran_list.products.urls')),
 
