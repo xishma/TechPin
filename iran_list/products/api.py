@@ -1,40 +1,57 @@
-from django.db.models import Count
+import collections
+import json
+
+from django.conf import settings
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
-from oauth2client import client, crypt
+from django.contrib.auth.models import User
 from django.core import serializers
+from django.db.models import Count
 from django.forms import model_to_dict
-from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template.context_processors import csrf
 from django.urls import reverse
-import json
-import collections
 from django.utils.translation import ugettext_lazy as _
-from django.contrib.auth.models import User
-from iran_list.settings import SITE_ADDRESS
+from django.views.decorators.csrf import csrf_exempt
+from oauth2client import client, crypt
+from rest_framework.decorators import api_view
+from rest_framework.parsers import JSONParser
+
 from iran_list.products.forms import SignupForm, LoginForm, ChangePasswordForm, EditUserForm, ResetPasswordForm, \
     ProductForm, VersionForm, CommentForm, RateForm
 from iran_list.products.models import ResetPasswordCode, Profile, Product, get_sentinel_user, Version, Comment, Rate, \
     Type, Category
-from django.conf import settings
 from iran_list.products.models import SocialLogin
+from iran_list.products.serializers import ProductSerializer, JSONResponse, TypeSerializer, CategorySerializer, \
+    VersionSerializer, CommentSerializer
+from iran_list.settings import SITE_ADDRESS
 
 
 def pack_data(request, data):
-    data['user'] = request.user
-    data['categories'] = Category.objects.all()
+    if request.user.is_authenticated:
+        user = User.objects.get(id=request.user.id)
+        user_data = {'username': user.username, 'first_name': user.first_name,
+                     'last_name': user.last_name, 'email': user.email}
+
+        data['user'] = user_data
+
     data['site_address'] = SITE_ADDRESS
-    if data['site_address'][-1] == '/':
-        data['site_address'] = data['site_address'][:-1]
-    data.update(csrf(request))
+
+    types = Type.objects.all()
+    types_serializer = TypeSerializer(types, many=True)
+    categories = Category.objects.all()
+    categories_serializer = CategorySerializer(categories, many=True)
+
+    data['types'] = types_serializer.data
+    data['categories'] = categories_serializer.data
+
     return data
 
 
+@api_view(['GET'])
 def home(request):
     products = Product.objects.filter(status="pub")
-
-    new_product_form = ProductForm()
 
     type_object = None
     if 'type' in request.GET:
@@ -49,59 +66,76 @@ def home(request):
         products = products.filter(categories=category_object)
 
     top_p_products = products.annotate(rate_count=Count('rates')).order_by("-rate_count")[:25]
+    top_p_serializer = ProductSerializer(top_p_products, many=True)
     top_e_products = products.order_by("-average_p_rate")[:25]
+    top_e_serializer = ProductSerializer(top_e_products, many=True)
     top_new_products = products.order_by("-created_at")[:25]
+    top_new_serializer = ProductSerializer(top_new_products, many=True)
     top_ranked = products.order_by("-ranking")[:25]
+    top_ranked_serializer = ProductSerializer(top_ranked, many=True)
 
-    types = Type.objects.all()
-    categories = Category.objects.all()
+    data = {'top_p_products': top_p_serializer.data, 'top_e_serializer': top_e_serializer.data,
+            'top_new_serializer': top_new_serializer.data, 'top_ranked_serializer': top_ranked_serializer.data}
 
-    data = pack_data(request, {'top_p_products': top_p_products, 'top_e_products': top_e_products,
-                               'top_new_products': top_new_products, 'top_ranked': top_ranked, 'types': types,
-                               'categories': categories, 'type': type_object, 'category': category_object,
-                               'form': new_product_form})
-    return render_to_response('home.html', data)
+    if type_object:
+        type_serializer = TypeSerializer(type_object)
+        data['type'] = type_serializer.data
+
+    if category_object:
+        category_serializer = CategorySerializer(category_object)
+        data['category'] = category_serializer.data
+
+    data = pack_data(request, data)
+
+    return JSONResponse(data)
 
 
+@api_view(['GET'])
 def all_products(request):
     products = Product.objects.filter(status="pub").order_by("name_en")
-    products_dict = collections.OrderedDict()
+    products_dict = {}
 
     for product in products:
         if product.name_en[0] in [str(a) for a in range(0, 10)]:
             if "#" in products_dict:
-                products_dict["#"].append(product)
+                products_dict["#"].append(ProductSerializer(product).data)
             else:
-                products_dict["#"] = [product]
+                products_dict["#"] = [ProductSerializer(product).data]
         else:
             if product.name_en[0].upper() in products_dict:
-                products_dict[product.name_en[0].upper()].append(product)
+                products_dict[product.name_en[0].upper()].append(ProductSerializer(product).data)
             else:
-                products_dict[product.name_en[0].upper()] = [product]
+                products_dict[product.name_en[0].upper()] = [ProductSerializer(product).data]
 
-    data = pack_data(request, {'products': collections.OrderedDict(sorted(products_dict.items()))})
-    return render_to_response('products/all.html', data)
+    data = pack_data(request, {'products': products_dict})
+
+    return JSONResponse(data)
 
 
+@api_view(['POST'])
 def signup(request):
+    """
+    :param request: first_name, email, password, confirm_password
+    :return: success, datails
+    """
     if request.user.is_authenticated():
-        return HttpResponseRedirect(reverse('home'))
+        data = {'success': False, 'detail': 'Already logged in!'}
 
-    signup_form = SignupForm()
-    if request.method == 'POST':
-        signup_form = SignupForm(request.POST)
+    else:
+        signup_form = SignupForm(request.data)
 
         if signup_form.is_valid():
             user = signup_form.save()
             if user:
-                data = {'message': _(u'Successfully Registered. You can login now.'),
-                        'login': True}
-                data.update(csrf(request))
-                return render_to_response('common/message.html', data)
+                data = {'success': True, 'detail': _('Successfully Registered. You can login now.')}
+            else:
+                data = {'success': False, 'detail': _("Unknown errors during signup. Please try again.")}
+        else:
+            data = {'success': False, 'detail': dict(signup_form.errors.items())}
 
-    data = {'form': signup_form, 'title': _(u'Join Iran List'), 'gp_client_id': settings.GOOGLE_OAUTH2_CLIENT_ID}
+    data['gp_client_id'] = settings.GOOGLE_OAUTH2_CLIENT_ID
     data = pack_data(request, data)
-    return render_to_response('users/signup.html', data)
+    return JSONResponse(data)
 
 
 def signin(request):
@@ -122,9 +156,10 @@ def signin(request):
 
                 return HttpResponseRedirect(reverse('home'))
 
-    data = {'form': login_form, 'title': _(u'Enter Iran List'), 'gp_client_id': settings.GOOGLE_OAUTH2_CLIENT_ID }
+    data = {'form': login_form, 'title': _(u'Enter Iran List'), 'gp_client_id': settings.GOOGLE_OAUTH2_CLIENT_ID}
     data = pack_data(request, data)
     return render_to_response('users/login.html', data)
+
 
 def google_signin(request):
     if request.user.is_authenticated():
@@ -139,23 +174,23 @@ def google_signin(request):
         if idinfo['iss'] not in ['accounts.google.com', 'https://accounts.google.com']:
             raise crypt.AppIdentityError("Wrong issuer.")
 
-        # If auth request is from a G Suite domain:
-        #if idinfo['hd'] != GSUITE_DOMAIN_NAME:
-        #    raise crypt.AppIdentityError("Wrong hosted domain.")
+            # If auth request is from a G Suite domain:
+            # if idinfo['hd'] != GSUITE_DOMAIN_NAME:
+            #    raise crypt.AppIdentityError("Wrong hosted domain.")
     except crypt.AppIdentityError:
         # Invalid token
         data['success'] = False
 
     userid = idinfo['sub']
 
-    #check if user is not in the social login table then create it, else just log him in
+    # check if user is not in the social login table then create it, else just log him in
     try:
         social_user = SocialLogin.objects.get(social_unique_id=userid)
 
     except SocialLogin.DoesNotExist:
 
         user = User(first_name=idinfo['given_name'], last_name=idinfo['family_name'], email=idinfo['email'],
-                username=idinfo['email'], password=User.objects.make_random_password())
+                    username=idinfo['email'], password=User.objects.make_random_password())
         user.save()
 
         try:
@@ -171,10 +206,11 @@ def google_signin(request):
             print(user.is_authenticated)
     else:
         data['success'] = False
-        print( 'user none' )
+        print('user none')
 
     mimetype = 'application/json'
     return HttpResponse(json.dumps(data), mimetype)
+
 
 @login_required
 def change_password(request):
@@ -325,13 +361,9 @@ def product_page(request, slug):
         slug = slug[:-1]
 
     product = get_object_or_404(Product, slug=slug, status="pub")
-    version = product.last_approved_version()
 
     product.hit()
 
-    comment_form = CommentForm()
-
-    user_profile = None
     rate = None
     if request.user.is_authenticated:
         user_profile = Profile.get_user_profile(request.user)
@@ -347,12 +379,7 @@ def product_page(request, slug):
                 _rate = rates[i]
                 _rate.delete()
 
-    rate_form = RateForm(instance=rate)
-
     comments = product.comments.filter(status="pub")
-
-    commented = False
-    rated = False
 
     if request.method == "POST":
         if not request.user.is_authenticated:
@@ -368,7 +395,6 @@ def product_page(request, slug):
             rate_form = RateForm(request.POST, instance=rate)
             if rate_form.is_valid():
                 rate_form.save()
-                commented = True
 
         elif "comment" in request.POST:
             comment = Comment()
@@ -377,13 +403,18 @@ def product_page(request, slug):
             comment_form = CommentForm(request.POST, instance=comment)
             if comment_form.is_valid():
                 comment_form.save()
-                comment_form = CommentForm()
-                commented = True
 
-    data = {'product': product, 'version': version, 'rate_form': rate_form, 'comment_form': comment_form,
-            'comments': comments, 'commented': commented, 'rated': rated}
+    product_data = ProductSerializer(product).data
+    version_data = VersionSerializer(product.last_approved_version()).data
+    comments_data = CommentSerializer(comments, many=True).data
+
+    data = {'product': product_data, 'version': version_data, 'comments': comments_data, 'rate': None}
+
+    if rate is not None:
+        data['rate'] = rate.rate
+
     data = pack_data(request, data)
-    return render_to_response('products/product_page.html', data)
+    return JSONResponse(data)
 
 
 def rate_product(request, product_slug):
@@ -428,10 +459,10 @@ def rate_product(request, product_slug):
 
 
 def about(request):
-    data = pack_data(request, {'page_title': 'About'})
-    return render_to_response('about.html', data)
+    data = pack_data(request, {'page': 'about'})
+    return JSONResponse(data)
 
 
 def contribute(request):
-    data = pack_data(request, {})
-    return render_to_response('contribute.html', data)
+    data = pack_data(request, {'page': 'contribute'})
+    return JSONResponse(data)

@@ -33,20 +33,21 @@ class SignupForm(ModelForm):
 
     def clean_password(self):
         password = self.cleaned_data.get('password', None)
-        if len(password) < 8:
+        if not password or len(password) < 8:
             raise forms.ValidationError(_("The new password must be at least 8 characters long!"))
         return password
 
     def clean_email(self):
         email = self.cleaned_data.get('email', None)
-        if User.objects.filter(email__iexact=email).count() > 0:
+        if not email or User.objects.filter(email__iexact=email).count() > 0:
             raise forms.ValidationError(_("This Email is Already in Use!"))
         return email
 
     def save(self, commit=True):
-        user = super(SignupForm, self).save(commit)
-        user.set_password(self.cleaned_data['password'])
+        user = super(SignupForm, self).save(False)
         user.username = user.email.lower()
+        user.save()
+        user.set_password(self.cleaned_data['password'])
         user.save()
 
         profile = Profile(user=user)

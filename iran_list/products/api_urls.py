@@ -23,7 +23,7 @@ urlpatterns = [
     url(r'^about/?$', about, name='about'),
     url(r'^contribute/?$', contribute, name='contribute'),
 
-    url(r'^$', home, name='home'),
+    url(r'^$', home, name='api_home'),
 
     url(r'^(.+)/?$', product_page, name='product_page'),
 
