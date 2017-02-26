@@ -1,9 +1,11 @@
-from random import random
 import math
+from random import random
+
 from django.contrib.auth.models import User
 from django.db import models
 from django.db.models import Avg
 from django.utils.translation import ugettext_lazy as _
+
 from iran_list.products.helper import DataField
 
 

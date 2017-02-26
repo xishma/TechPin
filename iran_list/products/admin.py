@@ -1,7 +1,8 @@
 from django import forms
 from django.contrib import admin
-from iran_list.products.models import Type, Category, Product, Profile, Version, Comment, Rate
 from django.utils.translation import ugettext_lazy as _
+
+from iran_list.products.models import Type, Category, Product, Profile, Version, Comment, Rate
 
 
 class ProductForm(forms.ModelForm):

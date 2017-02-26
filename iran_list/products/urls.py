@@ -1,4 +1,5 @@
 from django.conf.urls import url
+
 from .views import signin, signup, signout, edit_profile, change_password, home, request_reset, reset_pass, add_product, \
     add_version, product_page, all_products, about, contribute, rate_product, google_signin
 

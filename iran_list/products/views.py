@@ -1,24 +1,25 @@
-from django.db.models import Count
+import collections
+import json
+
+from django.conf import settings
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
-from oauth2client import client, crypt
-from django.core import serializers
+from django.contrib.auth.models import User
+from django.db.models import Count
 from django.forms import model_to_dict
-from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template.context_processors import csrf
 from django.urls import reverse
-import json
-import collections
 from django.utils.translation import ugettext_lazy as _
-from django.contrib.auth.models import User
-from iran_list.settings import SITE_ADDRESS
+from oauth2client import client, crypt
+
 from iran_list.products.forms import SignupForm, LoginForm, ChangePasswordForm, EditUserForm, ResetPasswordForm, \
     ProductForm, VersionForm, CommentForm, RateForm
 from iran_list.products.models import ResetPasswordCode, Profile, Product, get_sentinel_user, Version, Comment, Rate, \
     Type, Category
-from django.conf import settings
 from iran_list.products.models import SocialLogin
+from iran_list.settings import SITE_ADDRESS
 
 
 def pack_data(request, data):

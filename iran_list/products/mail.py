@@ -1,6 +1,7 @@
 from django.urls import reverse
-from post_office import mail
 from django.utils.translation import ugettext_lazy as _
+from post_office import mail
+
 from iran_list.settings import SITE_ADDRESS, EMAIL_HOST_USER
 
 

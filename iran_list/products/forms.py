@@ -1,11 +1,12 @@
 import hashlib
 from datetime import datetime
+
 from django import forms
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
-from django.db.models import Q
 from django.forms import ModelForm, Form
 from django.utils.translation import ugettext_lazy as _
+
 from iran_list.products.mail import send_reset_pass_mail
 from iran_list.products.models import Profile, ResetPasswordCode, Product, Version, Comment, Rate
 

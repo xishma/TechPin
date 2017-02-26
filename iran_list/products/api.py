@@ -1,22 +1,12 @@
-import collections
-import json
-
 from django.conf import settings
 from django.contrib.auth import login, logout
-from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.core import serializers
 from django.db.models import Count
-from django.forms import model_to_dict
-from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render_to_response, get_object_or_404
-from django.template.context_processors import csrf
-from django.urls import reverse
 from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.csrf import csrf_exempt
 from oauth2client import client, crypt
 from rest_framework.decorators import api_view
-from rest_framework.parsers import JSONParser
 
 from iran_list.products.forms import SignupForm, LoginForm, ChangePasswordForm, EditUserForm, ResetPasswordForm, \
     ProductForm, VersionForm, CommentForm, RateForm
@@ -120,9 +110,9 @@ def signup(request):
     :return: success, datails
     """
     if request.method != "POST":
-        return JSONResponse({'success': False, 'detail': 'Invalid method!'})
+        return JSONResponse({'success': False, 'response': 405, 'detail': 'Invalid method!'})
     elif request.user.is_authenticated():
-        return JSONResponse({'success': False, 'detail': 'Already logged in!'})
+        return JSONResponse({'success': False, 'response': 403, 'detail': 'Already logged in!'})
     else:
         signup_form = SignupForm(request.data)
 
@@ -131,11 +121,12 @@ def signup(request):
             if user:
                 data = {'success': True}
             else:
-                return JSONResponse({'success': False, 'detail': _("Unknown errors during signup. Please try again.")})
+                return JSONResponse(
+                    {'success': False, 'response': 500, 'detail': _("Unknown errors during signup. Please try again.")})
         else:
-            data = {'success': False, 'detail': dict(signup_form.errors.items())}
+            data = {'success': False, 'response': 555, 'detail': dict(signup_form.errors.items())}
 
-    data['gp_client_id'] = settings.GOOGLE_OAUTH2_CLIENT_ID
+    data['gp_client_id'] = settings.GOOGLE_OAUTH2_C2LIENT_ID
     data = pack_data(request, data)
     return JSONResponse(data)
 
@@ -148,9 +139,9 @@ def signin(request):
         :return: success, datails
     """
     if request.method != "POST":
-        return JSONResponse({'success': False, 'detail': 'Invalid method!'})
+        return JSONResponse({'success': False, 'response': 405, 'detail': 'Invalid method!'})
     elif request.user.is_authenticated():
-        return JSONResponse({'success': False, 'detail': 'Already logged in!'})
+        return JSONResponse({'success': False, 'response': 403, 'detail': 'Already logged in!'})
     else:
         login_form = LoginForm(request.POST)
 
@@ -162,9 +153,9 @@ def signin(request):
                     Profile.objects.create(user=user)
                 data = {'success': True}
             else:
-                return JSONResponse({'success': False, 'detail': 'Failed to login. Please try again!'})
+                return JSONResponse({'success': False, 'response': 500, 'detail': 'Failed to login. Please try again!'})
         else:
-            data = {'success': False, 'detail': dict(login_form.errors.items())}
+            data = {'success': False, 'response': 555, 'detail': dict(login_form.errors.items())}
 
     data['gp_client_id'] = settings.GOOGLE_OAUTH2_CLIENT_ID
     data = pack_data(request, data)
@@ -174,9 +165,9 @@ def signin(request):
 @csrf_exempt
 def google_signin(request):
     if request.method != "POST":
-        data = {'success': False, 'detail': 'Invalid method!'}
+        data = {'success': False, 'response': 405, 'detail': 'Invalid method!'}
     elif request.user.is_authenticated():
-        data = {'success': False, 'detail': 'Already logged in!'}
+        data = {'success': False, 'response': 403, 'detail': 'Already logged in!'}
 
     else:
         # (Receive token by HTTPS POST)
@@ -194,7 +185,7 @@ def google_signin(request):
 
         except crypt.AppIdentityError:
             # Invalid token
-            return JSONResponse({'success': False})
+            return JSONResponse({'success': False, 'response': 500})
 
         userid = idinfo['sub']
 
@@ -219,9 +210,9 @@ def google_signin(request):
                 login(request, user)
             else:
                 social_user.delete()
-                return JSONResponse({'success': False})
+                return JSONResponse({'success': False, 'response': 500, })
         else:
-            return JSONResponse({'success': False})
+            return JSONResponse({'success': False, 'response': 500, })
 
     data = pack_data(request, data)
     return JSONResponse(data)
@@ -230,9 +221,9 @@ def google_signin(request):
 @csrf_exempt
 def change_password(request):
     if request.method != "POST":
-        return JSONResponse({'success': False, 'detail': 'Invalid method!'})
+        return JSONResponse({'success': False, 'response': 405, 'detail': 'Invalid method!'})
     elif not request.user.is_authenticated():
-        return JSONResponse({'success': False, 'detail': 'Login required!'})
+        return JSONResponse({'success': False, 'response': 403, 'detail': 'Login required!'})
     else:
         password_form = ChangePasswordForm(request.user, data=request.POST)
 
@@ -251,9 +242,9 @@ def change_password(request):
 @csrf_exempt
 def edit_profile(request):
     if request.method != "POST":
-        return JSONResponse({'success': False, 'detail': 'Invalid method!'})
+        return JSONResponse({'success': False, 'response': 405, 'detail': 'Invalid method!'})
     elif not request.user.is_authenticated():
-        return JSONResponse({'success': False, 'detail': 'Login required!'})
+        return JSONResponse({'success': False, 'response': 403, 'detail': 'Login required!'})
     else:
         user = request.user
         user_form = EditUserForm(request.POST, instance=user)
@@ -262,7 +253,7 @@ def edit_profile(request):
             user_form.save()
             data = {'success': True}
         else:
-            return JSONResponse({'success': False, 'detail': dict(user_form.errors.items())})
+            return JSONResponse({'success': False, 'response': 555, 'detail': dict(user_form.errors.items())})
 
     data = pack_data(request, data)
     return JSONResponse(data)
@@ -271,18 +262,19 @@ def edit_profile(request):
 @csrf_exempt
 def request_reset(request):
     if request.method != "POST":
-        return JSONResponse({'success': False, 'detail': 'Invalid method!'})
+        return JSONResponse({'success': False, 'response': 405, 'detail': 'Invalid method!'})
     else:
         form = ResetPasswordForm(request.POST)
 
         if form.is_valid():
             sent = form.save()
             if not sent:
-                return JSONResponse({'success': False, 'detail': 'Whoops! Something went wrong! Please Try again.'})
+                return JSONResponse(
+                    {'success': False, 'response': 500, 'detail': 'Whoops! Something went wrong! Please Try again.'})
             else:
                 data = {'success': True, 'detail': _(u'We Sent You an Email for Password Reset.')}
         else:
-            return JSONResponse({'success': False, 'detail': dict(form.errors.items())})
+            return JSONResponse({'success': False, 'response': 555, 'detail': dict(form.errors.items())})
 
     data = pack_data(request, data)
     return render_to_response('users/forgot_password.html', data)
@@ -291,12 +283,12 @@ def request_reset(request):
 @csrf_exempt
 def reset_pass(request, reset_code):
     if request.method != "POST":
-        return JSONResponse({'success': False, 'detail': 'Invalid method!'})
+        return JSONResponse({'success': False, 'response': 405, 'detail': 'Invalid method!'})
     else:
         try:
             reset_code = ResetPasswordCode.objects.get(code=reset_code)
         except ResetPasswordCode.DoesNotExist:
-            return JSONResponse({'success': False, 'detail': _(u'Invalid Link!')})
+            return JSONResponse({'success': False, 'response': 404, 'detail': _(u'Invalid Link!')})
 
         user = reset_code.profile.user
         password_form = ChangePasswordForm(user, reset=True, data=request.POST)
@@ -306,9 +298,10 @@ def reset_pass(request, reset_code):
                 reset_code.delete()
                 data = {'success': True, 'detail': _(u'Password Successfully changed!')}
             else:
-                return JSONResponse({'success': False, 'detail': 'Failed to set password. Please try again!'})
+                return JSONResponse(
+                    {'success': False, 'response': 500, 'detail': 'Failed to set password. Please try again!'})
         else:
-            return JSONResponse({'success': False, 'detail': dict(password_form.errors.items())})
+            return JSONResponse({'success': False, 'response': 555, 'detail': dict(password_form.errors.items())})
 
     data = pack_data(request, data)
     return render_to_response('users/forgot_password.html', data)
@@ -323,7 +316,7 @@ def signout(request):
 @csrf_exempt
 def add_product(request):
     if request.method != "POST":
-        return JSONResponse({'success': False, 'detail': 'Invalid method!'})
+        return JSONResponse({'success': False, 'response': 405, 'detail': 'Invalid method!'})
     else:
         product = Product()
         if request.user.is_authenticated:
@@ -337,9 +330,10 @@ def add_product(request):
             if product:
                 data = {'success': True}
             else:
-                return JSONResponse({'success': False, 'detail': 'Failed to set password. Please try again!'})
+                return JSONResponse(
+                    {'success': False, 'response': 500, 'detail': 'Failed to set password. Please try again!'})
         else:
-            return JSONResponse({'success': False, 'detail': dict(form.errors.items())})
+            return JSONResponse({'success': False, 'response': 555, 'detail': dict(form.errors.items())})
 
     data = pack_data(request, data)
     return JSONResponse(data)
@@ -348,15 +342,15 @@ def add_product(request):
 @csrf_exempt
 def add_version(request, product_slug):
     if request.method != "POST":
-        return JSONResponse({'success': False, 'detail': 'Invalid method!'})
+        return JSONResponse({'success': False, 'response': 405, 'detail': 'Invalid method!'})
     else:
         try:
             product = Product.objects.get(slug=product_slug)
         except Product.DoesNotExist:
-            return JSONResponse({'success': False, 'detail': 'Invalid product slug.'})
+            return JSONResponse({'success': False, 'response': 404, 'detail': 'Invalid product slug.'})
 
         if product.version is not None and not request.user.is_authenticated:
-            return JSONResponse({'success': False, 'detail': 'You should login first.'})
+            return JSONResponse({'success': False, 'response': 403, 'detail': 'You should login first.'})
 
         version = Version()
         version.version_code = 0
@@ -371,7 +365,7 @@ def add_version(request, product_slug):
             form.save()
             data = {'success': True, 'detail': _(u'Successfully added your update. We will review and apply it asap!')}
         else:
-            return JSONResponse({'success': False, 'detail': dict(form.errors.items())})
+            return JSONResponse({'success': False, 'response': 555, 'detail': dict(form.errors.items())})
 
     data = pack_data(request, data)
     return JSONResponse(data)
@@ -418,9 +412,9 @@ def product_page(request, slug):
 @csrf_exempt
 def rate_product(request, product_slug):
     if request.method != "POST":
-        return JSONResponse({'success': False, 'detail': 'Invalid method!'})
+        return JSONResponse({'success': False, 'response': 405, 'detail': 'Invalid method!'})
     elif not request.user.is_authenticated():
-        return JSONResponse({'success': False, 'detail': 'Login required!'})
+        return JSONResponse({'success': False, 'response': 403, 'detail': 'Login required!'})
     else:
         if product_slug.endswith("/"):
             product_slug = product_slug[:-1]
@@ -451,10 +445,10 @@ def rate_product(request, product_slug):
                 data = {'success': True}
 
             else:
-                return JSONResponse({'success': False, 'detail': dict(rate_form.errors.items())})
+                return JSONResponse({'success': False, 'response': 555, 'detail': dict(rate_form.errors.items())})
 
         except Product.DoesNotExist:
-            return JSONResponse({'success': False, 'detail': 'Invalid product slug!'})
+            return JSONResponse({'success': False, 'response': 404, 'detail': 'Invalid product slug!'})
 
     return JSONResponse(data)
 
@@ -462,9 +456,9 @@ def rate_product(request, product_slug):
 @csrf_exempt
 def review_product(request, product_slug):
     if request.method != "POST":
-        return JSONResponse({'success': False, 'detail': 'Invalid method!'})
+        return JSONResponse({'success': False, 'response': 405, 'detail': 'Invalid method!'})
     elif not request.user.is_authenticated():
-        return JSONResponse({'success': False, 'detail': 'Login required!'})
+        return JSONResponse({'success': False, 'response': 403, 'detail': 'Login required!'})
     else:
         if product_slug.endswith("/"):
             product_slug = product_slug[:-1]
@@ -481,10 +475,10 @@ def review_product(request, product_slug):
                 comment_form.save()
                 data = {'success': True}
             else:
-                return JSONResponse({'success': False, 'detail': dict(comment_form.errors.items())})
+                return JSONResponse({'success': False, 'response': 555, 'detail': dict(comment_form.errors.items())})
 
         except Product.DoesNotExist:
-            return JSONResponse({'success': False, 'detail': 'Invalid product slug!'})
+            return JSONResponse({'success': False, 'response': 404, 'detail': 'Invalid product slug!'})
 
     return JSONResponse(data)
 

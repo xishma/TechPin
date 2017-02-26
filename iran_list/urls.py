@@ -15,9 +15,9 @@ Including another URLconf
 """
 from django.conf.urls import url, include
 from django.contrib import admin
-from iran_list import settings
-from django.contrib.auth import views as auth_views
 from django.views.static import serve
+
+from iran_list import settings
 
 urlpatterns = [
     url(r'^static/(?P<path>.*)$', serve, {'document_root': settings.STATIC_ROOT}),
