@@ -6,6 +6,7 @@ from django.shortcuts import render_to_response, get_object_or_404
 from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.csrf import csrf_exempt
 from oauth2client import client, crypt
+from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view
 
 from iran_list.products.forms import SignupForm, LoginForm, ChangePasswordForm, EditUserForm, ResetPasswordForm, \
@@ -25,16 +26,9 @@ def pack_data(request, data):
                      'last_name': user.last_name, 'email': user.email}
 
         data['user'] = user_data
-
+    else:
+        data['user'] = None
     data['site_address'] = SITE_ADDRESS
-
-    types = Type.objects.all()
-    types_serializer = TypeSerializer(types, many=True)
-    categories = Category.objects.all()
-    categories_serializer = CategorySerializer(categories, many=True)
-
-    data['types'] = types_serializer.data
-    data['categories'] = categories_serializer.data
 
     return data
 
@@ -55,17 +49,23 @@ def home(request):
         category_object = get_object_or_404(Category, slug=category_slug)
         products = products.filter(categories=category_object)
 
-    top_p_products = products.annotate(rate_count=Count('rates')).order_by("-rate_count")[:25]
-    top_p_serializer = ProductSerializer(top_p_products, many=True)
-    top_e_products = products.order_by("-average_p_rate")[:25]
-    top_e_serializer = ProductSerializer(top_e_products, many=True)
+    # top_p_products = products.annotate(rate_count=Count('rates')).order_by("-rate_count")[:25]
+    # top_p_serializer = ProductSerializer(top_p_products, many=True)
+
     top_new_products = products.order_by("-created_at")[:25]
     top_new_serializer = ProductSerializer(top_new_products, many=True)
+
     top_ranked = products.order_by("-ranking")[:25]
     top_ranked_serializer = ProductSerializer(top_ranked, many=True)
 
-    data = {'top_p_products': top_p_serializer.data, 'top_e_serializer': top_e_serializer.data,
-            'top_new_serializer': top_new_serializer.data, 'top_ranked_serializer': top_ranked_serializer.data}
+    top_rank_ids = [product.id for product in top_ranked]
+    top_new_ids = [product.id for product in top_new_products]
+    top_e_products = products.exclude(id__in=top_new_ids).exclude(id__in=top_rank_ids).order_by("-hits")[:25]
+    top_e_serializer = ProductSerializer(top_e_products, many=True)
+
+    data = {'random_products': top_e_serializer.data,
+            'top_new_serializer': top_new_serializer.data,
+            'top_ranked_serializer': top_ranked_serializer.data}
 
     if type_object:
         type_serializer = TypeSerializer(type_object)
@@ -151,7 +151,8 @@ def signin(request):
                 login(request, user)
                 if Profile.objects.filter(user_id=user.id).count() == 0:
                     Profile.objects.create(user=user)
-                data = {'success': True}
+                token = Token.objects.get_or_create(user=user)[0]
+                data = {'success': True, 'api-token': token.key}
             else:
                 return JSONResponse({'success': False, 'response': 500, 'detail': 'Failed to login. Please try again!'})
         else:
@@ -208,6 +209,8 @@ def google_signin(request):
             user = User.objects.get(id=social_user.user_id)
             if user is not None:
                 login(request, user)
+                token = Token.objects.get_or_create(user=user)[0]
+                data['api-token'] = token.key
             else:
                 social_user.delete()
                 return JSONResponse({'success': False, 'response': 500, })
@@ -341,7 +344,7 @@ def add_product(request):
 
 @csrf_exempt
 def add_version(request, product_slug):
-    if request.method != "POST":
+    if request.method != "PATCH":
         return JSONResponse({'success': False, 'response': 405, 'detail': 'Invalid method!'})
     else:
         try:
@@ -490,4 +493,11 @@ def about(request):
 
 def contribute(request):
     data = pack_data(request, {'page': 'contribute'})
+    return JSONResponse(data)
+
+
+def categories(request):
+    category_list = Category.objects.all()
+    category_serializer = CategorySerializer(category_list, many=True)
+    data = pack_data(request, {'categories': category_serializer.data})
     return JSONResponse(data)
