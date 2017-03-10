@@ -461,7 +461,7 @@ def review_product(request, product_slug):
     if request.method != "POST":
         return JSONResponse({'success': False, 'response': 405, 'detail': 'Invalid method!'})
     elif not request.user.is_authenticated():
-        return JSONResponse(pack_data(request,{'success': False, 'response': 403, 'detail': 'Login required!'}))
+        return JSONResponse({'success': False, 'response': 403, 'detail': 'Login required!'})
     else:
         if product_slug.endswith("/"):
             product_slug = product_slug[:-1]
