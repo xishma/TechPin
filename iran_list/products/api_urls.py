@@ -2,7 +2,8 @@ from django.conf.urls import url
 from rest_framework.authtoken.views import obtain_auth_token
 
 from .api import signin, signup, signout, edit_profile, change_password, home, request_reset, reset_pass, add_product, \
-    add_version, product_page, all_products, about, contribute, rate_product, google_signin, review_product, categories
+    add_version, product_page, all_products, about, contribute, rate_product, google_signin, review_product, categories, \
+    types
 
 urlpatterns = [
     url(r'^signup/?$', signup, name='api_signup'),
@@ -26,6 +27,7 @@ urlpatterns = [
     url(r'^products/(.+)$', product_page, name='api_product_page'),
 
     url(r'^categories/?$', categories, name='api_categories'),
+    url(r'^product_types/?$', types, name='api_types'),
 
     url(r'^about/?$', about, name='api_about'),
     url(r'^contribute/?$', contribute, name='api_contribute'),

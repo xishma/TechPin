@@ -26,13 +26,13 @@ class VersionSerializer(serializers.ModelSerializer):
 class TypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Type
-        exclude = ['id']
+        exclude = []
 
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        exclude = ['id']
+        exclude = []
 
 
 class CommentSerializer(serializers.ModelSerializer):

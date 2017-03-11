@@ -64,8 +64,8 @@ def home(request):
     top_e_serializer = ProductSerializer(top_e_products, many=True)
 
     data = {'random_products': top_e_serializer.data,
-            'top_new_serializer': top_new_serializer.data,
-            'top_ranked_serializer': top_ranked_serializer.data}
+            'top_new': top_new_serializer.data,
+            'top_ranked': top_ranked_serializer.data}
 
     if type_object:
         type_serializer = TypeSerializer(type_object)
@@ -445,7 +445,7 @@ def rate_product(request, product_slug):
             rate_form = RateForm(request.POST, instance=rate)
             if rate_form.is_valid():
                 rate_form.save()
-                data = {'success': True}
+                data = {'success': True, 'new_p_rate': product.average_p_rate, 'new_e_rate': product.average_e_rate}
 
             else:
                 return JSONResponse({'success': False, 'response': 555, 'detail': dict(rate_form.errors.items())})
@@ -500,4 +500,11 @@ def categories(request):
     category_list = Category.objects.all()
     category_serializer = CategorySerializer(category_list, many=True)
     data = pack_data(request, {'categories': category_serializer.data})
+    return JSONResponse(data)
+
+
+def types(request):
+    type_list = Type.objects.all()
+    type_serializer = TypeSerializer(type_list, many=True)
+    data = pack_data(request, {'product_types': type_serializer.data})
     return JSONResponse(data)
