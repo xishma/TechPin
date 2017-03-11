@@ -205,8 +205,8 @@ class ProductForm(ModelForm):
 class VersionForm(ModelForm):
     class Meta:
         model = Version
-        fields = ['description_en', 'email', 'android_app', 'ios_app', 'linkedin', 'twitter', 'instagram', 'extra_url',
-                  'year', 'city', 'country', 'employees', 'logo', 'banner']
+        fields = ['description_en', 'summary', 'email', 'android_app', 'ios_app', 'linkedin', 'twitter', 'instagram',
+                  'extra_url', 'year', 'city', 'country', 'employees', 'logo', 'banner']
 
 
 class CommentForm(ModelForm):

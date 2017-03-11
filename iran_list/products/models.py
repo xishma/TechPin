@@ -159,6 +159,8 @@ class Version(models.Model):
     description_en = models.TextField(null=True, blank=True, verbose_name=_(u"English description"))
     description_fa = models.TextField(null=True, blank=True, verbose_name=_(u"Persian description"))
 
+    summary = models.CharField(max_length=256, null=True, blank=True, verbose_name=_(u"Summary"))
+
     email = models.EmailField(null=True, blank=True, verbose_name=_(u"Email"))
     android_app = models.URLField(null=True, blank=True, verbose_name=_(u"Android App"))
     ios_app = models.URLField(null=True, blank=True, verbose_name=_(u"iOS App"))
@@ -196,6 +198,15 @@ class Version(models.Model):
 
     def __str__(self):
         return "%s" % self.product
+
+    @property
+    def product_summary(self):
+        if self.summary is not None:
+            return self.summary
+        elif self.description_en is not None:
+            return self.description_en[:256] + "..."
+        else:
+            return "..."
 
     def save(self, *args, **kwargs):
 
@@ -250,7 +261,8 @@ class Version(models.Model):
         output = {}
         for field_name in Version._meta.get_fields():
             if not field_name.name in ['created_at', 'updated_at', 'status', 'product', 'editor', 'responder',
-                                       'version_code', 'id', 'description_en', 'description_fa', 'banner', 'logo']:
+                                       'version_code', 'id', 'description_en', 'description_fa', 'summary', 'banner',
+                                       'logo']:
                 field_value = getattr(self, field_name.name)
                 if field_value:
                     output[field_name.name] = DataField(field_name.verbose_name, field_value)

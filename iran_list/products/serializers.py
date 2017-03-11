@@ -16,9 +16,11 @@ class ProductSerializer(serializers.ModelSerializer):
 
 
 class VersionSerializer(serializers.ModelSerializer):
+    summary = serializers.ReadOnlyField(source='product_summary')
     class Meta:
         model = Version
-        exclude = ['id', 'status', 'version_code', 'created_at', 'updated_at', 'product', 'editor', 'responder']
+        exclude = ['id', 'status', 'version_code', 'created_at', 'updated_at', 'product', 'editor', 'responder',
+                   'summary']
 
 
 class TypeSerializer(serializers.ModelSerializer):
