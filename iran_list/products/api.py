@@ -400,10 +400,9 @@ def product_page(request, slug):
     comments = product.comments.filter(status="pub")
 
     product_data = ProductSerializer(product).data
-    version_data = VersionSerializer(product.last_approved_version()).data
     comments_data = CommentSerializer(comments, many=True).data
 
-    data = {'product': product_data, 'version': version_data, 'comments': comments_data, 'rate': None}
+    data = {'product': product_data, 'comments': comments_data, 'rate': None}
 
     if rate is not None:
         data['rate'] = rate.rate

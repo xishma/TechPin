@@ -6,21 +6,23 @@ from rest_framework.renderers import JSONRenderer
 from iran_list.products.models import Product, Type, Category, Version, Comment
 
 
-class ProductSerializer(serializers.ModelSerializer):
-    categories = serializers.SlugRelatedField(many=True, slug_field='slug', read_only=True)
-    product_type = serializers.SlugRelatedField(slug_field='slug', read_only=True)
-
-    class Meta:
-        model = Product
-        exclude = ['status', 'hits', 'created_at', 'updated_at', 'creator', 'version', 'id']
-
-
 class VersionSerializer(serializers.ModelSerializer):
     summary = serializers.ReadOnlyField(source='product_summary')
+
     class Meta:
         model = Version
         exclude = ['id', 'status', 'version_code', 'created_at', 'updated_at', 'product', 'editor', 'responder',
                    'summary']
+
+
+class ProductSerializer(serializers.ModelSerializer):
+    categories = serializers.SlugRelatedField(many=True, slug_field='slug', read_only=True)
+    product_type = serializers.SlugRelatedField(slug_field='slug', read_only=True)
+    details = VersionSerializer(read_only=True,source='version')
+
+    class Meta:
+        model = Product
+        exclude = ['status', 'hits', 'created_at', 'updated_at', 'creator', 'version', 'id']
 
 
 class TypeSerializer(serializers.ModelSerializer):
