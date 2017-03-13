@@ -16,7 +16,7 @@ from iran_list.products.models import ResetPasswordCode, Profile, Product, get_s
 from iran_list.products.models import SocialLogin
 from iran_list.products.serializers import ProductSerializer, JSONResponse, TypeSerializer, CategorySerializer, \
     VersionSerializer, CommentSerializer
-from iran_list.settings import SITE_ADDRESS
+from iran_list.settings import SITE_ADDRESS,GOOGLE_OAUTH2_CLIENT_ID
 
 
 def pack_data(request, data):
@@ -126,7 +126,7 @@ def signup(request):
         else:
             data = {'success': False, 'response': 555, 'detail': dict(signup_form.errors.items())}
 
-    data['gp_client_id'] = settings.GOOGLE_OAUTH2_C2LIENT_ID
+    data['gp_client_id'] = GOOGLE_OAUTH2_CLIENT_ID
     data = pack_data(request, data)
     return JSONResponse(data)
 
@@ -158,7 +158,7 @@ def signin(request):
         else:
             data = {'success': False, 'response': 555, 'detail': dict(login_form.errors.items())}
 
-    data['gp_client_id'] = settings.GOOGLE_OAUTH2_CLIENT_ID
+    data['gp_client_id'] = GOOGLE_OAUTH2_CLIENT_ID
     data = pack_data(request, data)
     return JSONResponse(data)
 
@@ -176,7 +176,7 @@ def google_signin(request):
         data = {'success': True, 'user': True, 'token': token}
 
         try:
-            idinfo = client.verify_id_token(token, settings.GOOGLE_OAUTH2_CLIENT_ID)
+            idinfo = client.verify_id_token(token, GOOGLE_OAUTH2_CLIENT_ID)
 
             if idinfo['iss'] not in ['accounts.google.com', 'https://accounts.google.com']:
                 raise crypt.AppIdentityError("Wrong issuer.")
