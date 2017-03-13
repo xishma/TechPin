@@ -114,7 +114,7 @@ def signup(request):
     elif request.user.is_authenticated():
         return JSONResponse({'success': False, 'response': 403, 'detail': 'Already logged in!'})
     else:
-        signup_form = SignupForm(request.data)
+        signup_form = SignupForm(request.POST)
 
         if signup_form.is_valid():
             user = signup_form.save()
