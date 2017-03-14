@@ -454,7 +454,6 @@ def rate_product(request, product_slug):
 
     return JSONResponse(data)
 
-
 @csrf_exempt
 def review_product(request, product_slug):
     if request.method != "POST":
@@ -484,24 +483,25 @@ def review_product(request, product_slug):
 
     return JSONResponse(data)
 
-
+@api_view(['GET'])
 def about(request):
     data = pack_data(request, {'page': 'about'})
     return JSONResponse(data)
 
-
+@api_view(['GET'])
 def contribute(request):
     data = pack_data(request, {'page': 'contribute'})
     return JSONResponse(data)
 
 
+@api_view(['GET'])
 def categories(request):
     category_list = Category.objects.all()
     category_serializer = CategorySerializer(category_list, many=True)
     data = pack_data(request, {'categories': category_serializer.data})
     return JSONResponse(data)
 
-
+@api_view(['GET'])
 def types(request):
     type_list = Type.objects.all()
     type_serializer = TypeSerializer(type_list, many=True)
