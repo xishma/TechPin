@@ -16,7 +16,7 @@ from iran_list.products.models import ResetPasswordCode, Profile, Product, get_s
 from iran_list.products.models import SocialLogin
 from iran_list.products.serializers import ProductSerializer, JSONResponse, TypeSerializer, CategorySerializer, \
     VersionSerializer, CommentSerializer
-from iran_list.settings import SITE_ADDRESS,GOOGLE_OAUTH2_CLIENT_ID
+from iran_list.settings import SITE_ADDRESS, GOOGLE_OAUTH2_CLIENT_ID
 
 
 def pack_data(request, data):
@@ -80,30 +80,8 @@ def home(request):
     return JSONResponse(data)
 
 
-@api_view(['GET'])
-def all_products(request):
-    products = Product.objects.filter(status="pub").order_by("name_en")
-    products_dict = {}
-
-    for product in products:
-        if product.name_en[0] in [str(a) for a in range(0, 10)]:
-            if "#" in products_dict:
-                products_dict["#"].append(ProductSerializer(product).data)
-            else:
-                products_dict["#"] = [ProductSerializer(product).data]
-        else:
-            if product.name_en[0].upper() in products_dict:
-                products_dict[product.name_en[0].upper()].append(ProductSerializer(product).data)
-            else:
-                products_dict[product.name_en[0].upper()] = [ProductSerializer(product).data]
-
-    data = pack_data(request, {'products': products_dict})
-
-    return JSONResponse(data)
-
-
-# @api_view(['POST'])
 @csrf_exempt
+@api_view(['POST'])
 def signup(request):
     """
     :param request: first_name, email, password, confirm_password
@@ -131,8 +109,30 @@ def signup(request):
     return JSONResponse(data)
 
 
-# @api_view(['POST'])
+@api_view(['GET'])
+def all_products(request):
+    products = Product.objects.filter(status="pub").order_by("name_en")
+    products_dict = {}
+
+    for product in products:
+        if product.name_en[0] in [str(a) for a in range(0, 10)]:
+            if "#" in products_dict:
+                products_dict["#"].append(ProductSerializer(product).data)
+            else:
+                products_dict["#"] = [ProductSerializer(product).data]
+        else:
+            if product.name_en[0].upper() in products_dict:
+                products_dict[product.name_en[0].upper()].append(ProductSerializer(product).data)
+            else:
+                products_dict[product.name_en[0].upper()] = [ProductSerializer(product).data]
+
+    data = pack_data(request, {'products': products_dict})
+
+    return JSONResponse(data)
+
+
 @csrf_exempt
+@api_view(['POST'])
 def signin(request):
     """
         :param request: email, password
@@ -164,6 +164,7 @@ def signin(request):
 
 
 @csrf_exempt
+@api_view(['POST'])
 def google_signin(request):
     if request.method != "POST":
         data = {'success': False, 'response': 405, 'detail': 'Invalid method!'}
@@ -222,6 +223,7 @@ def google_signin(request):
 
 
 @csrf_exempt
+@api_view(['POST'])
 def change_password(request):
     if request.method != "POST":
         return JSONResponse({'success': False, 'response': 405, 'detail': 'Invalid method!'})
@@ -243,6 +245,7 @@ def change_password(request):
 
 
 @csrf_exempt
+@api_view(['POST'])
 def edit_profile(request):
     if request.method != "POST":
         return JSONResponse({'success': False, 'response': 405, 'detail': 'Invalid method!'})
@@ -263,6 +266,7 @@ def edit_profile(request):
 
 
 @csrf_exempt
+@api_view(['POST'])
 def request_reset(request):
     if request.method != "POST":
         return JSONResponse({'success': False, 'response': 405, 'detail': 'Invalid method!'})
@@ -284,6 +288,7 @@ def request_reset(request):
 
 
 @csrf_exempt
+@api_view(['POST'])
 def reset_pass(request, reset_code):
     if request.method != "POST":
         return JSONResponse({'success': False, 'response': 405, 'detail': 'Invalid method!'})
@@ -310,13 +315,14 @@ def reset_pass(request, reset_code):
     return render_to_response('users/forgot_password.html', data)
 
 
-@csrf_exempt
+@api_view(['GET'])
 def signout(request):
     logout(request)
     return JSONResponse({'success': True})
 
 
 @csrf_exempt
+@api_view(['POST'])
 def add_product(request):
     if request.method != "POST":
         return JSONResponse({'success': False, 'response': 405, 'detail': 'Invalid method!'})
@@ -343,6 +349,7 @@ def add_product(request):
 
 
 @csrf_exempt
+@api_view(['POST'])
 def add_version(request, product_slug):
     if request.method != "PATCH":
         return JSONResponse({'success': False, 'response': 405, 'detail': 'Invalid method!'})
@@ -374,6 +381,7 @@ def add_version(request, product_slug):
     return JSONResponse(data)
 
 
+@api_view(['GET'])
 def product_page(request, slug):
     if slug.endswith("/"):
         slug = slug[:-1]
@@ -455,7 +463,9 @@ def rate_product(request, product_slug):
 
     return JSONResponse(data)
 
+
 @csrf_exempt
+@api_view(['POST'])
 def review_product(request, product_slug):
     if request.method != "POST":
         return JSONResponse({'success': False, 'response': 405, 'detail': 'Invalid method!'})
@@ -484,10 +494,12 @@ def review_product(request, product_slug):
 
     return JSONResponse(data)
 
+
 @api_view(['GET'])
 def about(request):
     data = pack_data(request, {'page': 'about'})
     return JSONResponse(data)
+
 
 @api_view(['GET'])
 def contribute(request):
@@ -501,6 +513,7 @@ def categories(request):
     category_serializer = CategorySerializer(category_list, many=True)
     data = pack_data(request, {'categories': category_serializer.data})
     return JSONResponse(data)
+
 
 @api_view(['GET'])
 def types(request):
