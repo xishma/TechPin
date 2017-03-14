@@ -349,7 +349,7 @@ def add_product(request):
 
 
 @csrf_exempt
-@api_view(['POST'])
+@api_view(['PATCH'])
 def add_version(request, product_slug):
     if request.method != "PATCH":
         return JSONResponse({'success': False, 'response': 405, 'detail': 'Invalid method!'})
@@ -370,7 +370,7 @@ def add_version(request, product_slug):
         else:
             version.editor = Profile.get_user_profile(get_sentinel_user())
 
-        form = VersionForm(request.POST, request.FILES, instance=version)
+        form = VersionForm(request.data, request.FILES, instance=version)
         if form.is_valid():
             form.save()
             data = {'success': True, 'detail': _(u'Successfully added your update. We will review and apply it asap!')}
