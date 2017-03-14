@@ -412,6 +412,7 @@ def product_page(request, slug):
 
 
 @csrf_exempt
+@api_view(['POST'])
 def rate_product(request, product_slug):
     if request.method != "POST":
         return JSONResponse({'success': False, 'response': 405, 'detail': 'Invalid method!'})
