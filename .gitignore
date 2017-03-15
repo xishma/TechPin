@@ -19,5 +19,4 @@ Thumbs.db
 *.sqlite3
 
 local_settings.py
-iran_list/settings.py
 __pycache__
