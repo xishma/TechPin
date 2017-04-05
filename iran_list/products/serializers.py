@@ -19,6 +19,7 @@ class ProductSerializer(serializers.ModelSerializer):
     categories = serializers.SlugRelatedField(many=True, slug_field='slug', read_only=True)
     product_type = serializers.SlugRelatedField(slug_field='slug', read_only=True)
     details = VersionSerializer(read_only=True,source='version')
+    rate_count = serializers.ReadOnlyField(source='p_rate_count')
 
     class Meta:
         model = Product
