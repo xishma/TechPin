@@ -27,6 +27,6 @@ urlpatterns = [
 
     url(r'^api/', include('iran_list.products.api_urls')),
 
-    url(r'^', include('iran_list.products.urls')),
+    # url(r'^', include('iran_list.products.urls')),
 
 ]
