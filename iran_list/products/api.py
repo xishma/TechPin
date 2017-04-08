@@ -337,7 +337,7 @@ def add_product(request):
         if form.is_valid():
             product = form.save()
             if product:
-                data = {'success': True}
+                data = {'success': True, 'slug': product.slug}
             else:
                 return JSONResponse(
                     {'success': False, 'response': 500, 'detail': 'Failed to set password. Please try again!'})
