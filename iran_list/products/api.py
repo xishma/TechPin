@@ -454,7 +454,7 @@ def rate_product(request, product_slug):
             if rate_form.is_valid():
                 rate_form.save()
                 data = {'success': True, 'new_p_rate': product.average_p_rate, 'new_e_rate': product.average_e_rate,
-                        'p_rate_count': product.p_rate_count}
+                        'p_rate_count': product.p_rate_count()}
 
             else:
                 return JSONResponse({'success': False, 'response': 555, 'detail': dict(rate_form.errors.items())})
@@ -488,8 +488,8 @@ def get_rating(request, product_slug):
                     _rate = rates[i]
                     _rate.delete()
             except Rate.DoesNotExist:
-                return JSONResponse({'success': True, 'rate': 0, 'p_rate_count': product.p_rate_count})
-            data = {'success': True, 'rate': rate.rate, 'p_rate_count': product.p_rate_count}
+                return JSONResponse({'success': True, 'rate': 0, 'p_rate_count': product.p_rate_count()})
+            data = {'success': True, 'rate': rate.rate, 'p_rate_count': product.p_rate_count()}
 
         except Product.DoesNotExist:
             return JSONResponse({'success': False, 'response': 404, 'detail': 'Invalid product slug!'})
