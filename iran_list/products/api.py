@@ -453,10 +453,43 @@ def rate_product(request, product_slug):
             rate_form = RateForm(request.POST, instance=rate)
             if rate_form.is_valid():
                 rate_form.save()
-                data = {'success': True, 'new_p_rate': product.average_p_rate, 'new_e_rate': product.average_e_rate}
+                data = {'success': True, 'new_p_rate': product.average_p_rate, 'new_e_rate': product.average_e_rate,
+                        'p_rate_count': product.p_rate_count}
 
             else:
                 return JSONResponse({'success': False, 'response': 555, 'detail': dict(rate_form.errors.items())})
+
+        except Product.DoesNotExist:
+            return JSONResponse({'success': False, 'response': 404, 'detail': 'Invalid product slug!'})
+
+    return JSONResponse(data)
+
+
+@csrf_exempt
+@api_view(['GET'])
+def get_rating(request, product_slug):
+    if not request.user.is_authenticated():
+        return JSONResponse({'success': False, 'response': 403, 'detail': 'Login required!'})
+    else:
+        if product_slug.endswith("/"):
+            product_slug = product_slug[:-1]
+
+        try:
+            product = Product.objects.get(slug=product_slug, status="pub")
+            user_profile = Profile.get_user_profile(request.user)
+            try:
+                rate = Rate.objects.get(user_id=user_profile.id, product_id=product.id,
+                                        user_type=user_profile.is_editor)
+            except Rate.MultipleObjectsReturned:
+                rates = Rate.objects.filter(user_id=user_profile.id, product_id=product.id,
+                                            user_type=user_profile.is_editor)
+                rate = rates[0]
+                for i in range(1, rates.count()):
+                    _rate = rates[i]
+                    _rate.delete()
+            except Rate.DoesNotExist:
+                return JSONResponse({'success': True, 'rate': 0, 'p_rate_count': product.p_rate_count})
+            data = {'success': True, 'rate': rate.rate, 'p_rate_count': product.p_rate_count}
 
         except Product.DoesNotExist:
             return JSONResponse({'success': False, 'response': 404, 'detail': 'Invalid product slug!'})

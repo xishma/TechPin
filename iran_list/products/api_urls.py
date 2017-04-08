@@ -3,7 +3,7 @@ from rest_framework.authtoken.views import obtain_auth_token
 
 from .api import signin, signup, signout, edit_profile, change_password, home, request_reset, reset_pass, add_product, \
     add_version, product_page, all_products, about, contribute, rate_product, google_signin, review_product, categories, \
-    types
+    types, get_rating
 
 urlpatterns = [
     url(r'^signup/?$', signup, name='api_signup'),
@@ -25,6 +25,7 @@ urlpatterns = [
     url(r'^products/(.+)/rate/?$', rate_product, name='api_rate_product'),
     url(r'^products/(.+)/comments/?$', review_product, name='api_rate_product'),
     url(r'^products/(.+)$', product_page, name='api_product_page'),
+    url(r'^rates/(.+)/?$', get_rating, name='api_get_rating'),
 
     url(r'^categories/?$', categories, name='api_categories'),
     url(r'^product_types/?$', types, name='api_types'),
