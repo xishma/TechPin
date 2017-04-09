@@ -8,7 +8,7 @@ from django.forms import ModelForm, Form
 from django.utils.translation import ugettext_lazy as _
 
 from iran_list.products.mail import send_reset_pass_mail
-from iran_list.products.models import Profile, ResetPasswordCode, Product, Version, Comment, Rate
+from iran_list.products.models import Profile, ResetPasswordCode, Product, Version, Comment, Rate, get_sentinel_user
 
 
 class SignupForm(ModelForm):
@@ -200,6 +200,12 @@ class ProductForm(ModelForm):
     class Meta:
         model = Product
         fields = ['name_en', 'website', 'product_type', 'categories']
+
+    def save(self, commit=True):
+        product = super(ProductForm, self).save(commit)
+        version = Version(product=product, version_code=0, editor=Profile.get_user_profile(get_sentinel_user()))
+        version.save()
+        return product
 
 
 class VersionForm(ModelForm):
