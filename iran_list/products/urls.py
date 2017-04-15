@@ -21,7 +21,6 @@ urlpatterns = [
     url(r'^products/rate/(.+)?/$', rate_product, name='rate_product'),
 
     url(r'^all/?$', all_products, name='all_products'),
-    url(r'^category/(.+)/products/?$', category_products, name='category_products'),
 
     url(r'^about/?$', about, name='about'),
     url(r'^contribute/?$', contribute, name='contribute'),
