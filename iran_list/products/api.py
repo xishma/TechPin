@@ -140,7 +140,7 @@ def category_products(request, category_slug):
 
     products = category.products.filter(status="pub")
 
-    data = pack_data(request, {'products': ProductSerializer(products, many=True)})
+    data = pack_data(request, {'products': ProductSerializer(products, many=True).data})
 
     return JSONResponse(data)
 
