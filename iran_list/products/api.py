@@ -131,6 +131,20 @@ def all_products(request):
     return JSONResponse(data)
 
 
+@api_view(['GET'])
+def category_products(request, category_slug):
+    try:
+        category = Category.objects.get(slug=category_slug)
+    except Category.DoesNotExist:
+        return JSONResponse({'success': False, 'response': 404, 'detail': 'Category not found!'})
+
+    products = category.products.filter(status="pub")
+
+    data = pack_data(request, {'products': ProductSerializer(products, many=True)})
+
+    return JSONResponse(data)
+
+
 @csrf_exempt
 @api_view(['POST'])
 def signin(request):

@@ -1,5 +1,6 @@
 from django.conf.urls import url
 
+from iran_list.products.api import category_products
 from .views import signin, signup, signout, edit_profile, change_password, home, request_reset, reset_pass, add_product, \
     add_version, product_page, all_products, about, contribute, rate_product, google_signin
 
@@ -20,6 +21,7 @@ urlpatterns = [
     url(r'^products/rate/(.+)?/$', rate_product, name='rate_product'),
 
     url(r'^all/?$', all_products, name='all_products'),
+    url(r'^category/(.+)/products/?$', category_products, name='category_products'),
 
     url(r'^about/?$', about, name='about'),
     url(r'^contribute/?$', contribute, name='contribute'),
