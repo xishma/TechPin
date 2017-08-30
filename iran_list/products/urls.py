@@ -4,7 +4,7 @@ from rest_framework.schemas import get_schema_view
 
 from .views import signin, signup, signout, edit_profile, change_password, home, request_reset, reset_pass, add_product, \
     add_version, product_page, all_products, about, contribute, rate_product, google_signin, review_product, categories, \
-    types, get_rating, category_products
+    types, get_rating, category_products, random_product_page
 
 schema_view = get_schema_view(title="Techpin")
 
@@ -29,7 +29,8 @@ urlpatterns = [
     url(r'^products/(.+)/versions/add/?$', add_version, name='api_add_version'),
     url(r'^products/(.+)/rate/?$', rate_product, name='api_rate_product'),
     url(r'^products/(.+)/comments/?$', review_product, name='api_rate_product'),
-    url(r'^products/(.+)$', product_page, name='api_product_page'),
+    url(r'^products/(.+)/?$', product_page, name='api_product_page'),
+    url(r'^random-product/?$', random_product_page, name='api_random_product_page'),
     url(r'^rates/(.+)/?$', get_rating, name='api_get_rating'),
 
     url(r'^categories/?$', categories, name='api_categories'),

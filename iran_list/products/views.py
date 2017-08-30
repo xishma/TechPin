@@ -1,5 +1,6 @@
 from django.contrib.auth import login, logout
 from django.contrib.auth.models import User
+from django.db.models import Q
 from django.shortcuts import render_to_response, get_object_or_404
 from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.csrf import csrf_exempt
@@ -110,6 +111,11 @@ def signup(request):
 @api_view(['GET'])
 def all_products(request):
     products = Product.objects.filter(status="pub").order_by("name_en")
+
+    if 'search' in request.GET:
+        term = request.GET['search']
+        products = products.filter(Q(website__icontains=term) | Q(name_en__icontains=term) | Q(name_fa__icontains=term))
+
     products_dict = {}
 
     for product in products:
@@ -400,6 +406,44 @@ def product_page(request, slug):
 
     product = get_object_or_404(Product, slug=slug, status="pub")
 
+    product.hit()
+
+    rate = None
+    if request.user.is_authenticated:
+        user_profile = Profile.get_user_profile(request.user)
+        try:
+            rate = Rate.objects.get(user_id=user_profile.id, product_id=product.id, user_type=user_profile.is_editor)
+        except Rate.DoesNotExist:
+            pass
+        except Rate.MultipleObjectsReturned:
+            rates = Rate.objects.filter(user_id=user_profile.id, product_id=product.id,
+                                        user_type=user_profile.is_editor)
+            rate = rates[0]
+            for i in range(1, rates.count()):
+                _rate = rates[i]
+                _rate.delete()
+
+    comments = product.comments.filter(status="pub")
+
+    product_data = ProductSerializer(product).data
+    comments_data = CommentSerializer(comments, many=True).data
+
+    data = {'product': product_data, 'comments': comments_data, 'rate': None}
+
+    if rate is not None:
+        data['rate'] = rate.rate
+
+    data = pack_data(request, data)
+    return JSONResponse(data)
+
+
+@api_view(['GET'])
+def random_product_page(request):
+    products = Product.objects.filter(status="pub")
+
+    from random import randint
+    random_index = randint(0, products.count())
+    product = products[random_index]
     product.hit()
 
     rate = None
