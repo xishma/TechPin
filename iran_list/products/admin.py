@@ -2,7 +2,7 @@ from django import forms
 from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
 
-from iran_list.products.models import Type, Category, Product, Profile, Version, Comment, Rate
+from iran_list.products.models import Type, Category, Product, Profile, Version, Comment, Rate, Investment
 
 
 class ProductForm(forms.ModelForm):
@@ -46,10 +46,20 @@ class VersionAdmin(admin.ModelAdmin):
         exclude = []
 
 
+class InvestmentAdmin(admin.ModelAdmin):
+    list_display = ['__str__', 'status']
+    list_filter = ['status']
+    readonly_fields = ['created_at', 'updated_at']
+
+    class Meta:
+        exclude = []
+
+
 admin.site.register(Type)
 admin.site.register(Category)
 admin.site.register(Product, ProductAdmin)
 admin.site.register(Version, VersionAdmin)
+admin.site.register(Investment, InvestmentAdmin)
 admin.site.register(Profile)
 admin.site.register(Comment)
 admin.site.register(Rate)

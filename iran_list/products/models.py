@@ -140,6 +140,12 @@ class Product(models.Model):
     def p_rate_count(self):
         return self.rates.filter(user_type=False).count()
 
+    def get_investments_received(self):
+        return self.investments_received.filter(status='ver')
+
+    def get_investments_done(self):
+        return self.investments_done.filter(status='ver')
+
 
 def logo_dir(instance, filename):
     return '/'.join(['products/logo', "%s-%d" % (instance.version.id, filename)])
@@ -281,6 +287,38 @@ class Version(models.Model):
                 output[key].make_link(links[key])
 
         return output
+
+
+class Investment(models.Model):
+    STATUS = (('pen', _(u'Pending')), ('ver', _(u'Verified')), ('rej', _(u'Rejected')))
+
+    status = models.CharField(max_length=3, choices=STATUS, default='pen', verbose_name=_(u"Status"))
+
+    amount = models.PositiveIntegerField(verbose_name=_("Investment Amount"))
+    investor_name = models.CharField(max_length=511, verbose_name=_("Investor name"))
+    text = models.TextField(verbose_name=_("Text"))
+    year = models.PositiveSmallIntegerField(verbose_name=_("Investment Year"))
+    month = models.PositiveSmallIntegerField(verbose_name=_("Investment Month"), blank=True, null=True)
+
+    link = models.URLField(verbose_name=_(u"Link"), blank=True, null=True)
+    document = models.ImageField(upload_to='investments/docs', verbose_name=_(u"Document"), null=True, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Created At"))
+    updated_at = models.DateTimeField(auto_now=True, verbose_name=_("Updated At"))
+
+    user = models.ForeignKey(User, related_name="added_investments", verbose_name=_(u"User"),
+                             on_delete=models.SET(get_sentinel_user))
+    invested_on = models.ForeignKey("Product", related_name="investments_received", verbose_name=_(u"Invested On"),
+                                    on_delete=models.CASCADE)
+    investor = models.ForeignKey("Product", related_name="investments_done", verbose_name=_(u"Investor"),
+                                 on_delete=models.SET_NULL, blank=True, null=True)
+
+    class Meta:
+        verbose_name = _(u'Investment')
+        verbose_name_plural = _(u'Investments')
+
+    def __str__(self):
+        return "%s : %s - %s" % (self.invested_on, self.investor_name, self.amount)
 
 
 class Comment(models.Model):
