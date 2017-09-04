@@ -1,3 +1,11 @@
+"""
+    Before you go any further:
+    Have you ever done something in your life, that you're not proud of?
+    When i wrote this code, i had zero experience with django rest framework (or in fact, with writing any kind of api).
+    I migrated this from a form/view based django project, while i was overwhelmed by a shit load of tasks.
+    I didn't have the time to write this properly. Although this works, i know it's a disgrace.
+    Some day, i will comeback and fix this, i promise. Until that they, please forgive me, and know that i'm truly sorry!
+"""
 from django.contrib.auth import login, logout
 from django.contrib.auth.models import User
 from django.db.models import Q
