@@ -1,10 +1,9 @@
 from django.conf.urls import url
-from rest_framework.authtoken.views import obtain_auth_token
 from rest_framework.schemas import get_schema_view
 
 from .views import signin, signup, signout, edit_profile, change_password, home, request_reset, reset_pass, add_product, \
     add_version, product_page, all_products, about, contribute, rate_product, google_signin, review_product, categories, \
-    types, get_rating, category_products, random_product_page
+    types, get_rating, category_products, random_product_page, AddInvestmentView, AddDueDiligenceView
 
 schema_view = get_schema_view(title="Techpin")
 
@@ -35,6 +34,9 @@ urlpatterns = [
 
     url(r'^categories/?$', categories, name='api_categories'),
     url(r'^product_types/?$', types, name='api_types'),
+
+    url(r'^investments/add/$', AddInvestmentView.as_view()),
+    url(r'^due-diligence-message/add/$', AddDueDiligenceView.as_view()),
 
     url(r'^about/?$', about, name='api_about'),
     url(r'^contribute/?$', contribute, name='api_contribute'),

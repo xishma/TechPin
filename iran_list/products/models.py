@@ -140,6 +140,12 @@ class Product(models.Model):
     def p_rate_count(self):
         return self.rates.filter(user_type=False).count()
 
+    def get_investments_received(self):
+        return self.investments_received.filter(status='ver')
+
+    def get_investments_done(self):
+        return self.investments_done.filter(status='ver')
+
 
 def logo_dir(instance, filename):
     return '/'.join(['products/logo', "%s-%d" % (instance.version.id, filename)])
@@ -151,6 +157,9 @@ def banner_dir(instance, filename):
 
 class Version(models.Model):
     STATUS = (('pen', _(u'Pending')), ('pub', _(u'Published')), ('rej', _(u'Rejected')))
+    EMPLOYEE_ORDERS = (('0-5', _(u'0 - 5')), ('5-10', _(u'5 - 10')), ('10-20', _(u'10 - 20')),
+                       ('20-50', _(u'20 - 50')), ('50-200', _(u'50 - 200')), ('200-1000', _(u'200 - 1000')),
+                       ('1000+', _(u'1000+')),)
 
     status = models.CharField(max_length=3, choices=STATUS, default='pen', verbose_name=_(u"Status"))
 
@@ -177,6 +186,8 @@ class Version(models.Model):
 
     # validation in forms: x > 0
     employees = models.IntegerField(null=True, blank=True, verbose_name=_(u"Employees Count"))
+    employees_count = models.CharField(max_length=10, choices=EMPLOYEE_ORDERS, null=True, blank=True,
+                                       verbose_name=_(u"Employees Count"))
 
     logo = models.ImageField(null=True, blank=True, upload_to='products/logo', verbose_name=_(u"Logo"))
     banner = models.ImageField(null=True, blank=True, upload_to='products/banner', verbose_name=_(u"Banner"))
@@ -278,6 +289,38 @@ class Version(models.Model):
         return output
 
 
+class Investment(models.Model):
+    STATUS = (('pen', _(u'Pending')), ('ver', _(u'Verified')), ('rej', _(u'Rejected')))
+
+    status = models.CharField(max_length=3, choices=STATUS, default='pen', verbose_name=_(u"Status"))
+
+    amount = models.PositiveIntegerField(verbose_name=_("Investment Amount"))
+    investor_name = models.CharField(max_length=511, verbose_name=_("Investor name"))
+    text = models.TextField(verbose_name=_("Text"))
+    year = models.PositiveSmallIntegerField(verbose_name=_("Investment Year"))
+    month = models.PositiveSmallIntegerField(verbose_name=_("Investment Month"), blank=True, null=True)
+
+    link = models.URLField(verbose_name=_(u"Link"), blank=True, null=True)
+    document = models.ImageField(upload_to='investments/docs', verbose_name=_(u"Document"), null=True, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Created At"))
+    updated_at = models.DateTimeField(auto_now=True, verbose_name=_("Updated At"))
+
+    user = models.ForeignKey(User, related_name="added_investments", verbose_name=_(u"User"),
+                             on_delete=models.SET(get_sentinel_user))
+    invested_on = models.ForeignKey("Product", related_name="investments_received", verbose_name=_(u"Invested On"),
+                                    on_delete=models.CASCADE)
+    investor = models.ForeignKey("Product", related_name="investments_done", verbose_name=_(u"Investor"),
+                                 on_delete=models.SET_NULL, blank=True, null=True)
+
+    class Meta:
+        verbose_name = _(u'Investment')
+        verbose_name_plural = _(u'Investments')
+
+    def __str__(self):
+        return "%s : %s - %s" % (self.invested_on, self.investor_name, self.amount)
+
+
 class Comment(models.Model):
     STATUS = (('pub', _(u'Published')), ('rej', _(u'Rejected')))
 
@@ -305,6 +348,27 @@ class Comment(models.Model):
             self.user.save(update_fields=['user_point'])
 
         super(Comment, self).save(*args, **kwargs)
+
+
+class DueDiligenceMessage(models.Model):
+    STATUS = (('new', _(u'New')), ('on_hand', _(u'On hand')), ('closed', _(u'Closed')))
+
+    status = models.CharField(max_length=10, choices=STATUS, default='new', verbose_name=_(u"Status"))
+
+    name = models.CharField(max_length=255, verbose_name=_("Name"))
+    phone_number = models.CharField(max_length=20, verbose_name=_("Phone Number"), null=True, blank=True)
+    email = models.EmailField(verbose_name=_(u"Email"))
+    company_description = models.TextField(verbose_name=_("Company Description"))
+
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Created At"))
+    updated_at = models.DateTimeField(auto_now=True, verbose_name=_("Updated At"))
+
+    class Meta:
+        verbose_name = _(u'Due Diligence Message')
+        verbose_name_plural = _(u'Due Diligence Messages')
+
+    def __str__(self):
+        return self.name
 
 
 class Rate(models.Model):
@@ -352,3 +416,24 @@ class Rate(models.Model):
 class SocialLogin(models.Model):
     user = models.ForeignKey(User, verbose_name=_("User"), on_delete=models.CASCADE)
     social_unique_id = models.CharField(max_length=255, unique=True)
+
+
+def update_employees():
+    for version in Version.objects.all():
+        if version.employees and not version.employees_count:
+            if version.employees < 5:
+                version.employees_count = '0-5'
+            elif version.employees < 10:
+                version.employees_count = '5-10'
+            elif version.employees < 20:
+                version.employees_count = '10-20'
+            elif version.employees < 50:
+                version.employees_count = '20-50'
+            elif version.employees < 200:
+                version.employees_count = '50-200'
+            elif version.employees < 1000:
+                version.employees_count = '200-1000'
+            else:
+                version.employees_count = '1000+'
+
+            version.save()

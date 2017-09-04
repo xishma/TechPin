@@ -5,8 +5,10 @@ from django.shortcuts import render_to_response, get_object_or_404
 from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.csrf import csrf_exempt
 from oauth2client import client, crypt
+from rest_framework import generics, status
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view
+from rest_framework.response import Response
 
 from iran_list.products.forms import SignupForm, LoginForm, ChangePasswordForm, EditUserForm, ResetPasswordForm, \
     ProductForm, VersionForm, CommentForm, RateForm
@@ -14,7 +16,7 @@ from iran_list.products.models import ResetPasswordCode, Profile, Product, get_s
     Type, Category
 from iran_list.products.models import SocialLogin
 from iran_list.products.serializers import ProductSerializer, JSONResponse, TypeSerializer, CategorySerializer, \
-    CommentSerializer
+    CommentSerializer, AddInvestmentSerializer, DueDiligenceSerializer
 from iran_list.settings import SITE_ADDRESS, GOOGLE_OAUTH2_CLIENT_ID
 
 
@@ -610,3 +612,30 @@ def types(request):
     type_serializer = TypeSerializer(type_list, many=True)
     data = pack_data(request, {'product_types': type_serializer.data})
     return JSONResponse(data)
+
+
+class AddInvestmentView(generics.CreateAPIView):
+    serializer_class = AddInvestmentSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.user = request.user
+        serializer.is_valid(raise_exception=True)
+
+        self.perform_create(serializer)
+
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+
+class AddDueDiligenceView(generics.CreateAPIView):
+    serializer_class = DueDiligenceSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        self.perform_create(serializer)
+
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
