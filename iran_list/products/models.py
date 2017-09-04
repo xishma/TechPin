@@ -350,6 +350,27 @@ class Comment(models.Model):
         super(Comment, self).save(*args, **kwargs)
 
 
+class DueDiligenceMessage(models.Model):
+    STATUS = (('new', _(u'New')), ('on_hand', _(u'On hand')), ('closed', _(u'Closed')))
+
+    status = models.CharField(max_length=10, choices=STATUS, default='new', verbose_name=_(u"Status"))
+
+    name = models.CharField(max_length=255, verbose_name=_("Name"))
+    phone_number = models.CharField(max_length=20, verbose_name=_("Phone Number"), null=True, blank=True)
+    email = models.EmailField(verbose_name=_(u"Email"))
+    company_description = models.TextField(verbose_name=_("Company Description"))
+
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Created At"))
+    updated_at = models.DateTimeField(auto_now=True, verbose_name=_("Updated At"))
+
+    class Meta:
+        verbose_name = _(u'Due Diligence Message')
+        verbose_name_plural = _(u'Due Diligence Messages')
+
+    def __str__(self):
+        return self.name
+
+
 class Rate(models.Model):
     # validation: 1 < x < 5
     rate = models.PositiveSmallIntegerField(default=1, verbose_name=_("Rate"))
