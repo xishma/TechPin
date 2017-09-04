@@ -151,6 +151,9 @@ def banner_dir(instance, filename):
 
 class Version(models.Model):
     STATUS = (('pen', _(u'Pending')), ('pub', _(u'Published')), ('rej', _(u'Rejected')))
+    EMPLOYEE_ORDERS = (('0-5', _(u'0 - 5')), ('5-10', _(u'5 - 10')), ('10-20', _(u'10 - 20')),
+                       ('20-50', _(u'20 - 50')), ('50-200', _(u'50 - 200')), ('200-1000', _(u'200 - 1000')),
+                       ('1000+', _(u'1000+')),)
 
     status = models.CharField(max_length=3, choices=STATUS, default='pen', verbose_name=_(u"Status"))
 
@@ -177,6 +180,8 @@ class Version(models.Model):
 
     # validation in forms: x > 0
     employees = models.IntegerField(null=True, blank=True, verbose_name=_(u"Employees Count"))
+    employees_count = models.CharField(max_length=10, choices=EMPLOYEE_ORDERS, null=True, blank=True,
+                                       verbose_name=_(u"Employees Count"))
 
     logo = models.ImageField(null=True, blank=True, upload_to='products/logo', verbose_name=_(u"Logo"))
     banner = models.ImageField(null=True, blank=True, upload_to='products/banner', verbose_name=_(u"Banner"))
@@ -352,3 +357,24 @@ class Rate(models.Model):
 class SocialLogin(models.Model):
     user = models.ForeignKey(User, verbose_name=_("User"), on_delete=models.CASCADE)
     social_unique_id = models.CharField(max_length=255, unique=True)
+
+
+def update_employees():
+    for version in Version.objects.all():
+        if version.employees and not version.employees_count:
+            if version.employees < 5:
+                version.employees_count = '0-5'
+            elif version.employees < 10:
+                version.employees_count = '5-10'
+            elif version.employees < 20:
+                version.employees_count = '10-20'
+            elif version.employees < 50:
+                version.employees_count = '20-50'
+            elif version.employees < 200:
+                version.employees_count = '50-200'
+            elif version.employees < 1000:
+                version.employees_count = '200-1000'
+            else:
+                version.employees_count = '1000+'
+
+            version.save()
