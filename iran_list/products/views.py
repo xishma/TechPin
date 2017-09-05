@@ -67,6 +67,15 @@ def home(request):
     top_ranked = products.order_by("-ranking")[:25]
     top_ranked_serializer = ProductSerializer(top_ranked, many=True)
 
+    m100_products = Product.objects.filter(status="pub", categories__name_en='100m').order_by("-ranking")
+    m100_products_serializer = ProductSerializer(m100_products, many=True)
+
+    m10_products = Product.objects.filter(status="pub", categories__name_en='10m').order_by("-ranking")
+    m10_products_serializer = ProductSerializer(m10_products, many=True)
+
+    m1_products = Product.objects.filter(status="pub", categories__name_en='1m').order_by("-ranking")
+    m1_products_serializer = ProductSerializer(m1_products, many=True)
+
     top_rank_ids = [product.id for product in top_ranked]
     top_new_ids = [product.id for product in top_new_products]
     top_e_products = products.exclude(id__in=top_new_ids).exclude(id__in=top_rank_ids).order_by("-hits")[:25]
@@ -74,7 +83,11 @@ def home(request):
 
     data = {'random_products': top_e_serializer.data,
             'top_new': top_new_serializer.data,
-            'top_ranked': top_ranked_serializer.data}
+            'top_ranked': top_ranked_serializer.data,
+            '100m': m100_products_serializer.data,
+            '10m': m10_products_serializer.data,
+            '1m': m1_products_serializer.data,
+            }
 
     if type_object:
         type_serializer = TypeSerializer(type_object)
