@@ -296,7 +296,7 @@ class Investment(models.Model):
 
     amount = models.PositiveIntegerField(verbose_name=_("Investment Amount"))
     investor_name = models.CharField(max_length=511, verbose_name=_("Investor name"))
-    text = models.TextField(verbose_name=_("Text"))
+    text = models.TextField(verbose_name=_("Text"),blank=True,null=True)
     year = models.PositiveSmallIntegerField(verbose_name=_("Investment Year"))
     month = models.PositiveSmallIntegerField(verbose_name=_("Investment Month"), blank=True, null=True)
 
@@ -307,7 +307,7 @@ class Investment(models.Model):
     updated_at = models.DateTimeField(auto_now=True, verbose_name=_("Updated At"))
 
     user = models.ForeignKey(User, related_name="added_investments", verbose_name=_(u"User"),
-                             on_delete=models.SET(get_sentinel_user))
+                             on_delete=models.SET(get_sentinel_user),blank=True,null=True)
     invested_on = models.ForeignKey("Product", related_name="investments_received", verbose_name=_(u"Invested On"),
                                     on_delete=models.CASCADE)
     investor = models.ForeignKey("Product", related_name="investments_done", verbose_name=_(u"Investor"),

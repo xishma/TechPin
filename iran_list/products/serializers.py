@@ -61,7 +61,8 @@ class AddInvestmentSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         raise_errors_on_nested_writes('create', self, validated_data)
-        validated_data['user'] = self.user
+        if self.user and self.user.id:
+            validated_data['user'] = self.user
         try:
             instance = Investment.objects.create(**validated_data)
         except TypeError:
