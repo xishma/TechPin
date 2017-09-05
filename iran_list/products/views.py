@@ -24,7 +24,7 @@ from iran_list.products.models import ResetPasswordCode, Profile, Product, get_s
     Type, Category
 from iran_list.products.models import SocialLogin
 from iran_list.products.serializers import ProductSerializer, JSONResponse, TypeSerializer, CategorySerializer, \
-    CommentSerializer, AddInvestmentSerializer, DueDiligenceSerializer
+    CommentSerializer, AddInvestmentSerializer, DueDiligenceSerializer, ProductShortSerializer
 from iran_list.settings import SITE_ADDRESS, GOOGLE_OAUTH2_CLIENT_ID
 
 
@@ -647,3 +647,13 @@ class AddDueDiligenceView(generics.CreateAPIView):
 
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+
+class ProductListView(generics.ListAPIView):
+    serializer_class = ProductShortSerializer
+    queryset = Product.objects.filter(status='pub')
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        return Response({'products': serializer.data})
