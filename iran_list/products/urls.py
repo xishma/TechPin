@@ -3,7 +3,7 @@ from rest_framework.schemas import get_schema_view
 
 from .views import signin, signup, signout, edit_profile, change_password, home, request_reset, reset_pass, add_product, \
     add_version, product_page, all_products, about, contribute, rate_product, google_signin, review_product, categories, \
-    types, get_rating, category_products, random_product_page, AddInvestmentView, AddDueDiligenceView
+    types, get_rating, category_products, random_product_page, AddInvestmentView, AddDueDiligenceView, ProductListView
 
 schema_view = get_schema_view(title="Techpin")
 
@@ -21,6 +21,7 @@ urlpatterns = [
 
     url(r'^products/?$', all_products, name='api_all_products'),
     url(r'^products/top/?$', home, name='api_home'),
+    url(r'^products/names/?$', ProductListView.as_view()),
 
     url(r'^category/(.+)/products/?$', category_products, name='category_products'),
 
