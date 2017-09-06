@@ -318,7 +318,7 @@ class Investment(models.Model):
         verbose_name_plural = _(u'Investments')
 
     def __str__(self):
-        return "%s : %s - %s" % (self.invested_on, self.investor_name, self.amount)
+        return "%s : %s" % (self.invested_on, self.amount)
 
 
 class Comment(models.Model):
