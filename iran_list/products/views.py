@@ -70,10 +70,11 @@ def home(request):
     m100_products = Product.objects.filter(status="pub", categories__slug='100m').order_by("-ranking")
     m100_products_serializer = ProductSerializer(m100_products, many=True)
 
-    m10_products = Product.objects.filter(status="pub", categories__slug='10m').order_by("-ranking")
+    m10_products = Product.objects.filter(status="pub", categories__slug='10m').order_by("-ranking")[
+                   :25 - m100_products.count()]
     m10_products_serializer = ProductSerializer(m10_products, many=True)
 
-    m1_products = Product.objects.filter(status="pub", categories__slug='1m').order_by("-ranking")
+    m1_products = Product.objects.filter(status="pub", categories__slug='1m').order_by("-ranking")[:25]
     m1_products_serializer = ProductSerializer(m1_products, many=True)
 
     top_rank_ids = [product.id for product in top_ranked]
