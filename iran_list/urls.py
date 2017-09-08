@@ -25,6 +25,7 @@ urlpatterns = [
 
     url(r'^admin/?', admin.site.urls),
 
+    url(r'^v2/', include('iran_list.products.v2.urls')),
     url(r'^', include('iran_list.products.urls')),
 
 ]
