@@ -1,10 +1,13 @@
+from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from iran_list.products.models import Product
 from iran_list.products.v2.filters import get_query, SEARCH_FIELDS, FILTER_FIELDS, filter_query
 from iran_list.products.v2.response import ApiResponse
-from .base_views import ListView
-from .serializers import ProductSerializer
+from iran_list.settings import GOOGLE_OAUTH2_CLIENT_ID
+from .base_views import ListView, RetrieveView, CreateView
+from .serializers import ProductSerializer, UserSerializer, SignupSerializer, LoginSerializer, GoogleLoginSerializer
 
 
 class TopProductsView(ListView):
@@ -89,7 +92,81 @@ class ProductsView(ListView):
         else:
             products = ProductSerializer(queryset, many=True).data
 
-
         response_data = ApiResponse.get_base_response(data={'%ss' % self.model_name: products},
                                                       message=self.message['list'])
         return Response(response_data)
+
+
+class TraineeSignupView(CreateView):
+    """
+    post:
+    Signs up a user in system.
+    """
+    permission_classes = []
+    serializer_class = SignupSerializer
+    model_name = 'user'
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+
+        data = {self.model_name: serializer.data, 'gp_client_id': GOOGLE_OAUTH2_CLIENT_ID}
+
+        return Response(ApiResponse.get_base_response(response_code=status.HTTP_201_CREATED, data=data,
+                                                      message=self.message['create']),
+                        status=status.HTTP_201_CREATED, headers=headers)
+
+
+class LoginView(CreateView):
+    """
+    Use this endpoint to obtain user auth token
+    """
+    serializer_class = LoginSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            response_data = {'user': UserSerializer(serializer.user).data,
+                             'token': serializer.token,
+                             'gp_client_id': GOOGLE_OAUTH2_CLIENT_ID}
+            response = ApiResponse.get_base_response(data=response_data)
+        else:
+            # This part will never happen, because if the're any error in the validation, it'll raise an exception
+            response = ApiResponse.get_fail_response()
+        return Response(response)
+
+
+class GoogleLoginView(CreateView):
+    """
+    Use this endpoint for login with google action
+    """
+    serializer_class = GoogleLoginSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            response_data = {'user': UserSerializer(serializer.user).data,
+                             'token': serializer.token,
+                             'gp_client_id': GOOGLE_OAUTH2_CLIENT_ID}
+            response = ApiResponse.get_base_response(data=response_data)
+        else:
+            # This part will never happen, because if the're any error in the validation, it'll raise an exception
+            response = ApiResponse.get_fail_response()
+        return Response(response)
+
+
+class GetCurrentUserView(RetrieveView):
+    """
+    Gives the basic info of the current user.
+    """
+    permission_classes = [IsAuthenticated]
+    serializer_class = UserSerializer
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = request.user
+        serializer = self.get_serializer(instance)
+        return Response(
+            ApiResponse.get_base_response(data={'user': serializer.data}))
