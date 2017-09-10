@@ -352,12 +352,18 @@ class Comment(models.Model):
 
 class DueDiligenceMessage(models.Model):
     STATUS = (('new', _(u'New')), ('on_hand', _(u'On hand')), ('closed', _(u'Closed')))
+    TYPES = (('due-diligence', _(u'Due diligence')), ('consulting', _(u'Consulting')),
+             ('information', _(u'Information')), ('project', _(u'Project')),
+             ('feedback', _(u'Feedback')),
+             )
 
     status = models.CharField(max_length=10, choices=STATUS, default='new', verbose_name=_(u"Status"))
+    type = models.CharField(max_length=31, choices=TYPES, verbose_name=_(u"Type"))
 
     name = models.CharField(max_length=255, verbose_name=_("Name"))
     phone_number = models.CharField(max_length=20, verbose_name=_("Phone Number"), null=True, blank=True)
     email = models.EmailField(verbose_name=_(u"Email"))
+    company_name = models.CharField(max_length=255, verbose_name=_("Company Name"), null=True, blank=True)
     company_description = models.TextField(verbose_name=_("Company Description"))
 
     created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Created At"))
