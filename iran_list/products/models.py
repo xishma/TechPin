@@ -1,9 +1,15 @@
 import math
+from datetime import date
+from random import choice
 from random import random
+from string import digits
 
+import six
 from django.contrib.auth.models import User
 from django.db import models
 from django.db.models import Avg
+from django.utils.crypto import salted_hmac
+from django.utils.http import int_to_base36
 from django.utils.translation import ugettext_lazy as _
 
 from iran_list.products.helper import DataField
@@ -296,7 +302,7 @@ class Investment(models.Model):
 
     amount = models.PositiveIntegerField(verbose_name=_("Investment Amount"))
     # investor_name = models.CharField(max_length=511, verbose_name=_("Investor name"))
-    text = models.TextField(verbose_name=_("Text"),blank=True,null=True)
+    text = models.TextField(verbose_name=_("Text"), blank=True, null=True)
     year = models.PositiveSmallIntegerField(verbose_name=_("Investment Year"))
     month = models.PositiveSmallIntegerField(verbose_name=_("Investment Month"), blank=True, null=True)
 
@@ -307,7 +313,7 @@ class Investment(models.Model):
     updated_at = models.DateTimeField(auto_now=True, verbose_name=_("Updated At"))
 
     user = models.ForeignKey(User, related_name="added_investments", verbose_name=_(u"User"),
-                             on_delete=models.SET(get_sentinel_user),blank=True,null=True)
+                             on_delete=models.SET(get_sentinel_user), blank=True, null=True)
     invested_on = models.ForeignKey("Product", related_name="investments_received", verbose_name=_(u"Invested On"),
                                     on_delete=models.CASCADE)
     investor = models.ForeignKey("Product", related_name="investments_done", verbose_name=_(u"Investor"),
@@ -437,3 +443,106 @@ def update_employees():
                 version.employees_count = '1000+'
 
             version.save()
+
+
+MAX_TRIES = 5
+
+
+class PasswordResetTokenGenerator(object):
+    """
+    Strategy object used to generate and check tokens for the password
+    reset mechanism.
+    """
+    key_salt = "core.accounts.models.PasswordResetTokenGenerator"
+
+    def make_token(self, user):
+        """
+        Returns a token that can be used once to do a password reset
+        for the given user.
+        """
+        return self._make_token_with_timestamp(user, self._num_days(self._today()))
+
+    def check_token(self, user, token):
+        """
+        Check that a password reset token is correct for a given user.
+        """
+        if not (user and token):
+            return False
+
+        try:
+            token_code, token = token.split(',')
+        except:
+            token_code = ''
+
+        try:
+            passsword_token = \
+                PasswordToken.objects.filter(user=user, code=token_code, token=token, active=True)[0]
+        except IndexError:
+            for token in PasswordToken.objects.filter(user=user, token=token):
+                token.tried += 1
+                if token.tried > MAX_TRIES:
+                    token.active = False
+
+                token.save()
+
+            return False
+        passsword_token.active = False
+        passsword_token.save()
+
+        return True
+
+    def _make_token_with_timestamp(self, user, timestamp, create_token=True):
+        # timestamp is number of days since 2001-1-1.  Converted to
+        # base 36, this gives us a 3 digit string until about 2121
+        ts_b36 = int_to_base36(timestamp)
+
+        # By hashing on the internal state of the user and using state
+        # that is sure to change (the password salt will change as soon as
+        # the password is set, at least for current Django auth, and
+        # last_login will also change), we produce a hash that will be
+        # invalid as soon as it is used.
+        # We limit the hash to 20 chars to keep URL short
+
+        hash = salted_hmac(
+            self.key_salt,
+            self._make_hash_value(user, timestamp),
+        ).hexdigest()[::2]
+
+        if create_token:
+            password_token = ''.join(choice(digits) for i in range(6))
+            PasswordToken.objects.filter(user=user).update(active=False)
+            PasswordToken.objects.create(user=user, code=password_token, token="%s-%s" % (ts_b36, hash))
+
+            return "%s,%s-%s" % (password_token, ts_b36, hash)
+        else:
+            return "%s-%s" % (ts_b36, hash)
+
+    def _make_hash_value(self, user, timestamp):
+        # Ensure results are consistent across DB backends
+        login_timestamp = '' if user.last_login is None else user.last_login.replace(microsecond=0, tzinfo=None)
+        return (
+            six.text_type(user.pk) + user.password +
+            six.text_type(login_timestamp) + six.text_type(timestamp)
+        )
+
+    def _num_days(self, dt):
+        return (dt - date(2001, 1, 1)).days
+
+    def _today(self):
+        # Used for mocking in tests
+        return date.today()
+
+
+class PasswordToken(models.Model):
+    user = models.ForeignKey(User, related_name='password_tokens')
+    code = models.CharField(max_length=12)
+    token = models.CharField(max_length=127)
+    active = models.BooleanField(default=True)
+    tried = models.PositiveSmallIntegerField(default=0)
+
+    class Meta:
+        verbose_name = _("Password Token")
+        verbose_name_plural = _("Password Tokens")
+
+    def __str__(self):
+        return self.user.__str__()

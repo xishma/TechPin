@@ -41,11 +41,11 @@ INSTALLED_APPS = (
 
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
- 'corsheaders.middleware.CorsMiddleware',    
-'django.middleware.common.CommonMiddleware',
-    #'django.middleware.csrf.CsrfViewMiddleware',
-    'iran_list.csrf.DisableCSRF',    
-'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    # 'django.middleware.csrf.CsrfViewMiddleware',
+    'iran_list.csrf.DisableCSRF',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -96,10 +96,8 @@ GOOGLE_OAUTH2_CLIENT_ID = "57613180365-kgcq8nq2pb2v9psdqc4upm8cgmd13vam.apps.goo
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-#        'rest_framework.authentication.BasicAuthentication',
-#        'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.TokenAuthentication',
-    )
+    ),
 }
 
 CORS_ORIGIN_WHITELIST = (
@@ -110,3 +108,6 @@ CORS_ALLOW_CREDENTIALS = True
 
 CORS_ORIGIN_ALLOW_ALL = True
 CSRF_COOKIE_SECURE = True
+
+SITE_NAME = "Techpin"
+DOMAIN = "https://techpin.ir/"
