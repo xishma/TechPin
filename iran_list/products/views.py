@@ -61,9 +61,6 @@ def home(request):
     # top_p_products = products.annotate(rate_count=Count('rates')).order_by("-rate_count")[:25]
     # top_p_serializer = ProductSerializer(top_p_products, many=True)
 
-    top_new_products = products.order_by("-created_at")[:25]
-    top_new_serializer = ProductSerializer(top_new_products, many=True)
-
     top_ranked = products.order_by("-ranking")[:25]
     top_ranked_serializer = ProductSerializer(top_ranked, many=True)
 
@@ -77,6 +74,9 @@ def home(request):
 
     m1_products = Product.objects.filter(status="pub", categories__slug='1m').order_by("-ranking")[:list_length]
     m1_products_serializer = ProductSerializer(m1_products, many=True)
+
+    top_new_products = products.order_by("-created_at")[:list_length]
+    top_new_serializer = ProductSerializer(top_new_products, many=True)
 
     top_rank_ids = [product.id for product in top_ranked]
     top_new_ids = [product.id for product in top_new_products]
