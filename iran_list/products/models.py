@@ -294,10 +294,10 @@ class Investment(models.Model):
 
     status = models.CharField(max_length=3, choices=STATUS, default='pen', verbose_name=_(u"Status"))
 
-    amount = models.PositiveIntegerField(verbose_name=_("Investment Amount"))
+    amount = models.PositiveIntegerField(verbose_name=_("Investment Amount"), null=True, blank=True)
     # investor_name = models.CharField(max_length=511, verbose_name=_("Investor name"))
     text = models.TextField(verbose_name=_("Text"), blank=True, null=True)
-    year = models.PositiveSmallIntegerField(verbose_name=_("Investment Year"))
+    year = models.PositiveSmallIntegerField(verbose_name=_("Investment Year"), null=True, blank=True)
     month = models.PositiveSmallIntegerField(verbose_name=_("Investment Month"), blank=True, null=True)
 
     link = models.URLField(verbose_name=_(u"Link"), blank=True, null=True)
