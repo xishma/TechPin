@@ -9,7 +9,8 @@ from rest_framework.authtoken.models import Token
 from rest_framework.serializers import raise_errors_on_nested_writes
 
 from iran_list.products.models import Product, Type, Category, Version, Comment, Investment, DueDiligenceMessage, \
-    Profile, SocialLogin
+    Profile, SocialLogin, PasswordResetTokenGenerator
+from iran_list.products.v2.response import ApiResponse
 from iran_list.settings import GOOGLE_OAUTH2_CLIENT_ID
 
 
@@ -67,7 +68,7 @@ class LoginSerializer(serializers.Serializer):
 
         if username and password:
             try:
-                user = User.objects.get(Q(email=username) | Q(username=username))
+                user = User.objects.get(Q(email__iexact=username) | Q(username__iexact=username))
             except User.DoesNotExist:
                 user = None
             if user:
@@ -108,8 +109,9 @@ class GoogleLoginSerializer(serializers.Serializer):
         try:
             social_user = SocialLogin.objects.get(social_unique_id=userid)
         except SocialLogin.DoesNotExist:
-            user = User(first_name=idinfo['given_name'], last_name=idinfo['family_name'], email=idinfo['email'],
-                        username=idinfo['email'], password=User.objects.make_random_password())
+            user = User(first_name="%s %s" % (idinfo['given_name'], idinfo['family_name']),
+                        email=idinfo['email'], username=idinfo['email'].lower())
+            user.password = User.objects.make_random_password()
             user.save()
 
             try:
@@ -134,10 +136,93 @@ class GoogleLoginSerializer(serializers.Serializer):
         return attrs
 
 
+class ChangePasswordSerializer(serializers.Serializer):
+    current_password = serializers.CharField(label=_("Current Password"), style={'input_type': 'password'},
+                                             write_only=True)
+    new_password = serializers.CharField(label=_("New Password"), style={'input_type': 'password'}, write_only=True)
+
+    def set_user(self, user):
+        self.user = user
+
+    def validate_current_password(self, current_password):
+        if not self.user.check_password(current_password):
+            raise serializers.ValidationError(_('Current password is invalid!'))
+        return current_password
+
+    def validate_new_password(self, new_password):
+        errors = validate_password(password=new_password, user=self.user)
+        if errors:
+            raise serializers.ValidationError(errors)
+        return new_password
+
+    def create(self, validated_data):
+        password = validated_data['new_password']
+        self.user.set_password(password)
+        self.user.save()
+        return True
+
+
+class EditUserSerializer(serializers.ModelSerializer):
+    current_password = serializers.CharField(label=_("Current Password"), style={'input_type': 'password'},
+                                             write_only=True)
+
+    class Meta:
+        model = User
+        fields = ('first_name', 'email', 'current_password')
+
+    def validate_current_password(self, current_password):
+        if not self.user.check_password(current_password):
+            raise serializers.ValidationError(_('Current password is invalid!'))
+        return current_password
+
+
+class EmailPasswordResetSerializer(serializers.Serializer):
+    email = serializers.CharField()
+
+    def validate(self, attrs):
+        email = attrs.get("email")
+
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            raise serializers.ValidationError(_("User was not found!"))
+        return attrs
+
+
+class EmailPasswordResetConfirmSerializer(serializers.Serializer):
+    code = serializers.CharField()
+    token = serializers.CharField()
+    email = serializers.CharField()
+    new_password = serializers.CharField(style={'input_type': 'password'})
+
+    def validate_new_password(self, new_password):
+        errors = validate_password(password=new_password, user=self.user)
+        if errors:
+            raise serializers.ValidationError(errors)
+        return new_password
+
+    def validate_email(self, email):
+        try:
+            self.user = User.objects.get(email=email)
+        except:
+            raise serializers.ValidationError(_("Invalid data!"))
+        return email
+
+    def validate(self, attrs):
+        email_token = attrs.get('code')
+        web_token = attrs.get('token')
+        full_token = '%s,%s' % (email_token, web_token)
+
+        if not PasswordResetTokenGenerator().check_token(self.user, full_token):
+            raise serializers.ValidationError(
+                ApiResponse.get_fail_response(general_errors=self.error_messages['invalid_token']))
+        return attrs
+
+
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('username', 'first_name', 'last_name', 'email')
+        fields = ('first_name', 'email')
 
 
 class AddInvestmentSerializer(serializers.ModelSerializer):
