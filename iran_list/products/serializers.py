@@ -7,7 +7,8 @@ from rest_framework import serializers
 from rest_framework.renderers import JSONRenderer
 from rest_framework.serializers import raise_errors_on_nested_writes
 
-from iran_list.products.models import Product, Type, Category, Version, Comment, Investment, DueDiligenceMessage
+from iran_list.products.models import Product, Type, Category, Version, Comment, Investment, DueDiligenceMessage, \
+    SiteInfo
 
 
 class VersionSerializer(serializers.ModelSerializer):
@@ -124,6 +125,12 @@ class DueDiligenceSerializer(serializers.ModelSerializer):
     class Meta:
         model = DueDiligenceMessage
         fields = ('name', 'email', 'phone_number', 'company_description')
+
+
+class SiteInfoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SiteInfo
+        exclude = ['id']
 
 
 class JSONResponse(HttpResponse):

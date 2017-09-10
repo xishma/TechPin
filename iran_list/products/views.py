@@ -21,10 +21,10 @@ from rest_framework.response import Response
 from iran_list.products.forms import SignupForm, LoginForm, ChangePasswordForm, EditUserForm, ResetPasswordForm, \
     ProductForm, VersionForm, CommentForm, RateForm
 from iran_list.products.models import ResetPasswordCode, Profile, Product, get_sentinel_user, Version, Comment, Rate, \
-    Type, Category
+    Type, Category, SiteInfo
 from iran_list.products.models import SocialLogin
 from iran_list.products.serializers import ProductSerializer, JSONResponse, TypeSerializer, CategorySerializer, \
-    CommentSerializer, AddInvestmentSerializer, DueDiligenceSerializer, ProductShortSerializer
+    CommentSerializer, AddInvestmentSerializer, DueDiligenceSerializer, ProductShortSerializer, SiteInfoSerializer
 from iran_list.settings import SITE_ADDRESS, GOOGLE_OAUTH2_CLIENT_ID
 
 
@@ -671,3 +671,13 @@ class ProductListView(generics.ListAPIView):
         queryset = self.filter_queryset(self.get_queryset())
         serializer = self.get_serializer(queryset, many=True)
         return Response({'products': serializer.data})
+
+
+class SiteInfoListView(generics.ListAPIView):
+    serializer_class = SiteInfoSerializer
+    queryset = SiteInfo.objects.all()
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        return Response({'items': serializer.data})

@@ -3,7 +3,7 @@ from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
 
 from iran_list.products.models import Type, Category, Product, Profile, Version, Comment, Rate, Investment, \
-    DueDiligenceMessage
+    DueDiligenceMessage, SiteInfo
 
 
 class ProductForm(forms.ModelForm):
@@ -55,6 +55,7 @@ class InvestmentAdmin(admin.ModelAdmin):
     class Meta:
         exclude = []
 
+
 class DueDiligenceMessageAdmin(admin.ModelAdmin):
     list_display = ['__str__', 'status']
     list_filter = ['status']
@@ -62,6 +63,14 @@ class DueDiligenceMessageAdmin(admin.ModelAdmin):
 
     class Meta:
         exclude = []
+
+
+class SiteInfoAdmin(admin.ModelAdmin):
+    list_display = ['title', 'name']
+    list_filter = []
+    filter_horizontal = []
+    readonly_fields = []
+    search_fields = ['title', 'text', 'button_text','name']
 
 
 admin.site.register(Type)
@@ -73,3 +82,4 @@ admin.site.register(DueDiligenceMessage, DueDiligenceMessageAdmin)
 admin.site.register(Profile)
 admin.site.register(Comment)
 admin.site.register(Rate)
+admin.site.register(SiteInfo, SiteInfoAdmin)

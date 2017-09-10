@@ -3,7 +3,8 @@ from rest_framework.schemas import get_schema_view
 
 from .views import signin, signup, signout, edit_profile, change_password, home, request_reset, reset_pass, add_product, \
     add_version, product_page, all_products, about, contribute, rate_product, google_signin, review_product, categories, \
-    types, get_rating, category_products, random_product_page, AddInvestmentView, AddDueDiligenceView, ProductListView
+    types, get_rating, category_products, random_product_page, AddInvestmentView, AddDueDiligenceView, ProductListView, \
+    SiteInfoListView
 
 schema_view = get_schema_view(title="Techpin")
 
@@ -38,6 +39,8 @@ urlpatterns = [
 
     url(r'^investments/add/$', AddInvestmentView.as_view()),
     url(r'^due-diligence-message/add/$', AddDueDiligenceView.as_view()),
+
+    url(r'^site-info/list/$', SiteInfoListView.as_view()),
 
     url(r'^about/?$', about, name='api_about'),
     url(r'^contribute/?$', contribute, name='api_contribute'),
