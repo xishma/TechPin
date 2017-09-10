@@ -70,16 +70,17 @@ def home(request):
     m100_products = Product.objects.filter(status="pub", categories__slug='100m').order_by("-ranking")
     m100_products_serializer = ProductSerializer(m100_products, many=True)
 
-    m10_products = Product.objects.filter(status="pub", categories__slug='10m').order_by("-ranking")[
-                   :25 - m100_products.count()]
+    m10_products = Product.objects.filter(status="pub", categories__slug='10m').order_by("-ranking")
     m10_products_serializer = ProductSerializer(m10_products, many=True)
 
-    m1_products = Product.objects.filter(status="pub", categories__slug='1m').order_by("-ranking")[:25]
+    list_length = m100_products.count() + m10_products.count()
+
+    m1_products = Product.objects.filter(status="pub", categories__slug='1m').order_by("-ranking")[:list_length]
     m1_products_serializer = ProductSerializer(m1_products, many=True)
 
     top_rank_ids = [product.id for product in top_ranked]
     top_new_ids = [product.id for product in top_new_products]
-    top_e_products = products.exclude(id__in=top_new_ids).exclude(id__in=top_rank_ids).order_by("-hits")[:25]
+    top_e_products = products.exclude(id__in=top_new_ids).exclude(id__in=top_rank_ids).order_by("-hits")[:list_length]
     top_e_serializer = ProductSerializer(top_e_products, many=True)
 
     data = {'random_products': top_e_serializer.data,
