@@ -427,6 +427,7 @@ class SocialLogin(models.Model):
 class SiteInfo(models.Model):
     name = models.SlugField(max_length=127, verbose_name=_("Name"), unique=True)
     title = models.CharField(max_length=127, verbose_name=_("Title"), blank=True, null=True)
+    sub_title = models.CharField(max_length=255, verbose_name=_("Title"), blank=True, null=True)
     button_text = models.CharField(max_length=127, verbose_name=_("Button Text"), blank=True, null=True)
     text = models.TextField(verbose_name=_("Text"), blank=True, null=True)
 
