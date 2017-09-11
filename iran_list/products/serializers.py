@@ -124,7 +124,7 @@ class UserSerializer(serializers.ModelSerializer):
 class DueDiligenceSerializer(serializers.ModelSerializer):
     class Meta:
         model = DueDiligenceMessage
-        fields = ('name', 'email', 'phone_number', 'company_description')
+        fields = ('name', 'type', 'company_name', 'email', 'phone_number', 'company_description')
 
 
 class SiteInfoSerializer(serializers.ModelSerializer):
