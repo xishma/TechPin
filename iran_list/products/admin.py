@@ -19,6 +19,7 @@ class ProductAdmin(admin.ModelAdmin):
     list_filter = ('product_type', 'status', 'categories')
     filter_horizontal = ('categories',)
     readonly_fields = ['creator', 'created_at', 'updated_at', 'slug']
+    search_fields = ['name_en', 'website']
 
     class Meta:
         exclude = []
@@ -40,8 +41,9 @@ class VersionAdmin(admin.ModelAdmin):
     form = VersionForm
 
     list_display = ['__str__', 'version_code', 'status']
-    list_filter = ('product', 'status')
+    list_filter = ('status',)
     readonly_fields = ['version_code', 'product', 'editor', 'created_at', 'updated_at']
+    search_fields = ['product__name_en', 'product__website', 'email']
 
     class Meta:
         exclude = []
@@ -51,6 +53,7 @@ class InvestmentAdmin(admin.ModelAdmin):
     list_display = ['__str__', 'status']
     list_filter = ['status']
     readonly_fields = ['created_at', 'updated_at']
+    search_fields = ['investor__name_en', 'investor__website', 'invested_on__name_en', 'invested_on__website']
 
     class Meta:
         exclude = []
@@ -60,6 +63,7 @@ class DueDiligenceMessageAdmin(admin.ModelAdmin):
     list_display = ['__str__', 'status']
     list_filter = ['status']
     readonly_fields = ['created_at', 'updated_at']
+    search_fields = ['name', 'phone_number', 'email', 'company_name']
 
     class Meta:
         exclude = []
@@ -70,7 +74,7 @@ class SiteInfoAdmin(admin.ModelAdmin):
     list_filter = []
     filter_horizontal = []
     readonly_fields = []
-    search_fields = ['title', 'text', 'button_text','name']
+    search_fields = ['title', 'text', 'button_text', 'name']
 
 
 admin.site.register(Type)
