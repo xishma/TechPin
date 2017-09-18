@@ -16,6 +16,7 @@ class ProductAdmin(admin.ModelAdmin):
     form = ProductForm
 
     list_display = ['name_en', 'status', 'created_at']
+    list_editable = ('status',)
     list_filter = ('product_type', 'status', 'categories')
     filter_horizontal = ('categories',)
     readonly_fields = ['creator', 'created_at', 'updated_at', 'slug']
@@ -41,6 +42,7 @@ class VersionAdmin(admin.ModelAdmin):
     form = VersionForm
 
     list_display = ['__str__', 'version_code', 'status']
+    list_editable = ('status',)
     list_filter = ('status',)
     readonly_fields = ['version_code', 'product', 'editor', 'created_at', 'updated_at']
     search_fields = ['product__name_en', 'product__website', 'email']
@@ -51,6 +53,7 @@ class VersionAdmin(admin.ModelAdmin):
 
 class InvestmentAdmin(admin.ModelAdmin):
     list_display = ['__str__', 'status', 'is_acquired']
+    list_editable = ('status', 'is_acquired')
     list_filter = ['status', 'is_acquired']
     readonly_fields = ['created_at', 'updated_at']
     search_fields = ['investor__name_en', 'investor__website', 'invested_on__name_en', 'invested_on__website']
@@ -61,6 +64,7 @@ class InvestmentAdmin(admin.ModelAdmin):
 
 class DueDiligenceMessageAdmin(admin.ModelAdmin):
     list_display = ['__str__', 'status']
+    list_editable = ('status',)
     list_filter = ['status']
     readonly_fields = ['created_at', 'updated_at']
     search_fields = ['name', 'phone_number', 'email', 'company_name']
