@@ -308,6 +308,7 @@ class Investment(models.Model):
 
     amount = models.PositiveIntegerField(verbose_name=_("Investment Amount"), null=True, blank=True)
     # investor_name = models.CharField(max_length=511, verbose_name=_("Investor name"))
+    is_acquired = models.BooleanField(default=False, verbose_name=_("Is Acquired"))
     text = models.TextField(verbose_name=_("Text"), blank=True, null=True)
     year = models.PositiveSmallIntegerField(verbose_name=_("Investment Year"), null=True, blank=True)
     month = models.PositiveSmallIntegerField(verbose_name=_("Investment Month"), blank=True, null=True)

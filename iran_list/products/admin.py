@@ -50,8 +50,8 @@ class VersionAdmin(admin.ModelAdmin):
 
 
 class InvestmentAdmin(admin.ModelAdmin):
-    list_display = ['__str__', 'status']
-    list_filter = ['status']
+    list_display = ['__str__', 'status', 'is_acquired']
+    list_filter = ['status', 'is_acquired']
     readonly_fields = ['created_at', 'updated_at']
     search_fields = ['investor__name_en', 'investor__website', 'invested_on__name_en', 'invested_on__website']
 
