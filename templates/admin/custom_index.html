@@ -1,0 +1,59 @@
+{% extends "admin/index.html" %}
+{% load i18n static %}
+
+{% block footer %}
+
+    <style type="text/css">
+        .recent-activities-container {
+            padding: 10px 40px;
+        }
+
+        .activity-container {
+            padding: 10px 20px 20px;
+            margin: 20px 1%;
+            box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            width: 44%;
+            display: inline-block;
+            border: 1px solid #eeeeee;
+        }
+
+        .activity-container h3 {
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #aaa;
+        }
+
+        .recently-added {
+            display: block;
+            padding: 5px 5px 10px;
+            margin: 5px 5px 10px;
+            border-bottom: 1px dashed #ccf;
+        }
+
+    </style>
+
+    <div class="recent-activities-container">
+        <h1>
+            {% trans 'Recently Added' %}
+        </h1>
+
+        {% for activity_table in activity_tables %}
+            <div class="activity-container">
+                <h3>{{ activity_table.title }}</h3>
+                {% for item in activity_table.data %}
+                    <div class="recently-added">
+                        <a target="_blank" href="{{ item.get_admin_url }}">
+                            {{ item }}
+                        </a>
+                    </div>
+                {% endfor %}
+            </div>
+        {% empty %}
+            <div class="chart-container">
+                {% trans "Nothing recently added!" %}
+            </div>
+        {% endfor %}
+    </div>
+
+    {{ block.super }}
+{% endblock %}

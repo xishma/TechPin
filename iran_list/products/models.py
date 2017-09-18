@@ -2,6 +2,8 @@ import math
 from random import random
 
 from django.contrib.auth.models import User
+from django.contrib.contenttypes.models import ContentType
+from django.core import urlresolvers
 from django.db import models
 from django.db.models import Avg
 from django.utils.translation import ugettext_lazy as _
@@ -146,6 +148,11 @@ class Product(models.Model):
     def get_investments_done(self):
         return self.investments_done.filter(status='ver')
 
+    def get_admin_url(self):
+        content_type = ContentType.objects.get_for_model(self.__class__)
+        return urlresolvers.reverse("admin:%s_%s_change" % (content_type.app_label, content_type.model),
+                                    args=(self.id,))
+
 
 def logo_dir(instance, filename):
     return '/'.join(['products/logo', "%s-%d" % (instance.version.id, filename)])
@@ -288,6 +295,11 @@ class Version(models.Model):
 
         return output
 
+    def get_admin_url(self):
+        content_type = ContentType.objects.get_for_model(self.__class__)
+        return urlresolvers.reverse("admin:%s_%s_change" % (content_type.app_label, content_type.model),
+                                    args=(self.id,))
+
 
 class Investment(models.Model):
     STATUS = (('pen', _(u'Pending')), ('ver', _(u'Verified')), ('rej', _(u'Rejected')))
@@ -319,6 +331,11 @@ class Investment(models.Model):
 
     def __str__(self):
         return "%s : %s" % (self.invested_on, self.amount)
+
+    def get_admin_url(self):
+        content_type = ContentType.objects.get_for_model(self.__class__)
+        return urlresolvers.reverse("admin:%s_%s_change" % (content_type.app_label, content_type.model),
+                                    args=(self.id,))
 
 
 class Comment(models.Model):
@@ -375,6 +392,11 @@ class DueDiligenceMessage(models.Model):
 
     def __str__(self):
         return self.name
+
+    def get_admin_url(self):
+        content_type = ContentType.objects.get_for_model(self.__class__)
+        return urlresolvers.reverse("admin:%s_%s_change" % (content_type.app_label, content_type.model),
+                                    args=(self.id,))
 
 
 class Rate(models.Model):
