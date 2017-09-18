@@ -153,6 +153,8 @@ class Product(models.Model):
         return urlresolvers.reverse("admin:%s_%s_change" % (content_type.app_label, content_type.model),
                                     args=(self.id,))
 
+    def product_categories(self):
+        return self.categories.all()
 
 def logo_dir(instance, filename):
     return '/'.join(['products/logo', "%s-%d" % (instance.version.id, filename)])
