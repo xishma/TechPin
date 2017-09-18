@@ -6,6 +6,8 @@
     I didn't have the time to write this properly. Although this works, i know it's a disgrace.
     Some day, i will comeback and fix this, i promise. Until that they, please forgive me, and know that i'm truly sorry!
 """
+from random import randint
+
 from django.contrib.auth import login, logout
 from django.contrib.auth.models import User
 from django.db.models import Q
@@ -466,8 +468,7 @@ def product_page(request, slug):
 def random_product_page(request):
     products = Product.objects.filter(status="pub")
 
-    from random import randint
-    random_index = randint(0, products.count())
+    random_index = randint(1, products.count() - 1)
     product = products[random_index]
     product.hit()
 
