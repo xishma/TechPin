@@ -24,10 +24,10 @@ def admin_index(request, extra_context=None):
         app_list=app_list,
     )
 
-    products = Product.objects.all().order_by('-id')[0:10]
-    versions = Version.objects.all().order_by('-id')[0:10]
-    investments = Investment.objects.all().order_by('-id')[0:10]
-    messages = DueDiligenceMessage.objects.all().order_by('-id')[0:10]
+    products = Product.objects.filter(status='pen').order_by('-id')[0:10]
+    versions = Version.objects.filter(status='pen').order_by('-id')[0:10]
+    investments = Investment.objects.filter(status='pen').order_by('-id')[0:10]
+    messages = DueDiligenceMessage.objects.filter(status='new').order_by('-id')[0:10]
 
     context['activity_tables'] = [
         {'title': Product._meta.verbose_name.title(), 'data': products},
