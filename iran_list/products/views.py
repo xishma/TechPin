@@ -77,7 +77,7 @@ def home(request):
     m1_products = Product.objects.filter(status="pub", categories__slug='1m').order_by("-ranking")[:list_length]
     m1_products_serializer = ProductSerializer(m1_products, many=True)
 
-    top_new_products = products.order_by("-created_at")[:list_length]
+    top_new_products = products.exclude(product_type__slug='company').order_by("-created_at")[:list_length]
     top_new_serializer = ProductSerializer(top_new_products, many=True)
 
     top_rank_ids = [product.id for product in top_ranked]
